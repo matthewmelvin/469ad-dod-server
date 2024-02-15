@@ -47,6 +47,7 @@ RUN chdir $HOME \
 # rcbots - https://github.com/APGRoboCop/rcbot2
 # sourcemod - https://wiki.alliedmods.net/Installing_sourcemod
 # dod:s damage report - https://forums.alliedmods.net/showthread.php?p=1765621
+# delay hibertnate - https://forums.alliedmods.net/showthread.php?p=2740332
 # extra maps - https://www.dodbits.com/dods/index.php/downloads/category/38-rcbot2-waypoints
 #   RCBot2_75_custom_dods_maps - https://www.dodbits.com/dods/index.php/downloads/summary/43-rcbot2-installation-packages/198-rcbot2-map-pack-1
 #   RCBot2_map_pack_2 - https://www.dodbits.com/dods/index.php/downloads/summary/43-rcbot2-installation-packages/199-rcbot2-map-pack-2
@@ -62,12 +63,14 @@ RUN chdir $HOME/dod-server/dod \
   && rm -v addons/metamod_x64.vdf \
   && unzip /tmp/addons/rcbot2.zip \
   && tar -xzvf /tmp/addons/sourcemod-1.11.0-git6954-linux.tar.gz \
+  && unzip /tmp/addons/delayhibernate.zip \
   && mv -v addons/sourcemod/plugins/*.smx addons/sourcemod/plugins/disabled/ \
   && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
   && cp -v /tmp/addons/dod_damage_report.phrases.txt addons/sourcemod/translations/ \
   && cp -v /tmp/maps/*.bsp maps/ \
   && cp -v /tmp/waypoints/*.rcw addons/rcbot2/waypoints/dod/ \
   && cp -v /tmp/config/server.cfg cfg/ \
+  && cp -v /tmp/config/mapcycle.txt cfg/ \
   && cp -v /tmp/config/rcbot2.ini addons/rcbot2/config/config.ini \
   && cp -v /tmp/config/startup.sh ../ \
   && chmod 755 ../startup.sh \
