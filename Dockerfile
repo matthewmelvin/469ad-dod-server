@@ -22,15 +22,20 @@ COPY waypoints/ /tmp/waypoints
 ARG DEBIAN_FRONTEND=noninteractive
 RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
   && echo steam steam/license note '' | debconf-set-selections \
+  && apt-get update -y \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates locales \
+    unzip sudo curl \
+    vim-tiny less \
+    lighttpd \
   && dpkg --add-architecture i386 \
   && apt-get update -y \
   && apt-get install -y --no-install-recommends \
-    ca-certificates locales unzip sudo curl \
     libcurl4:i386 libncurses5:i386 libsdl2-2.0-0:i386 \
-    lighttpd steamcmd \
-    vim less \
-  && locale-gen en_US.UTF-8 \
+    steamcmd \
   && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* \
+  && locale-gen en_US.UTF-8 \
   && ln -s /usr/games/steamcmd /usr/bin/steamcmd \
   && sed -i -e "s#/var/www/html#$HOME/dod-server/dod/maps#" /etc/lighttpd/lighttpd.conf \
   && useradd -r -m -c "Steam User" $USER -s /bin/bash \
@@ -44,7 +49,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && ln -s $HOME/.steam/sdk32/steamclient.so $HOME/.steam/sdk32/steamservice.so \
     && ln -s $HOME/.steam/sdk64/steamclient.so $HOME/.steam/sdk64/steamservice.so \
     && mkdir dod-server \
-    && steamcmd +force_install_dir $HOME/dod-server +login anonymous +app_update 232290 +quit \
+    && steamcmd +set_download_throttle 25000 +force_install_dir $HOME/dod-server +login anonymous +app_update 232290 +quit \
     && cd $HOME/dod-server/dod \
     && find /tmp \
     && tar -xzvf /tmp/addons/mmsource-1.11.0-git1153-linux.tar.gz \
@@ -64,7 +69,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && chmod 755 ../startup.sh \
     && mkdir maps/graphs \
     && ln -s . maps/maps" \
-  && rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/*
+  && rm -rf /tmp/* /var/tmp/*
 
 ENV LANG 'en_US.UTF-8'
 ENV LANGUAGE 'en_US:en'
