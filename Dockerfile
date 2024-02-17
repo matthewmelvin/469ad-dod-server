@@ -49,7 +49,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && ln -s $HOME/.steam/sdk32/steamclient.so $HOME/.steam/sdk32/steamservice.so \
     && ln -s $HOME/.steam/sdk64/steamclient.so $HOME/.steam/sdk64/steamservice.so \
     && mkdir dod-server \
-    && steamcmd +set_download_throttle 25000 +force_install_dir $HOME/dod-server +login anonymous +app_update 232290 +quit \
+    && steamcmd +set_download_throttle 75000 +force_install_dir $HOME/dod-server +login anonymous +app_update 232290 +quit \
     && cd $HOME/dod-server/dod \
     && find /tmp \
     && tar -xzvf /tmp/addons/mmsource-1.11.0-git1153-linux.tar.gz \
@@ -57,6 +57,13 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && unzip /tmp/addons/rcbot2.zip \
     && tar -xzvf /tmp/addons/sourcemod-1.11.0-git6954-linux.tar.gz \
     && mv -v addons/sourcemod/plugins/*.smx addons/sourcemod/plugins/disabled/ \
+    && mv addons/sourcemod/plugins/disabled/admin-flatfile.smx addons/sourcemod/plugins/ \
+    && mv addons/sourcemod/plugins/disabled/adminhelp.smx addons/sourcemod/plugins/ \
+    && mv addons/sourcemod/plugins/disabled/adminmenu.smx addons/sourcemod/plugins/ \
+    && mv addons/sourcemod/plugins/disabled/basebans.smx addons/sourcemod/plugins/ \
+    && mv addons/sourcemod/plugins/disabled/basecommands.smx addons/sourcemod/plugins/ \
+    && mv addons/sourcemod/plugins/disabled/basetriggers.smx addons/sourcemod/plugins/ \
+    && mv addons/sourcemod/plugins/disabled/clientprefs.smx addons/sourcemod/plugins/ \
     && unzip /tmp/addons/delayhibernate.zip \
     && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_damage_report.phrases.txt addons/sourcemod/translations/ \
@@ -65,6 +72,10 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && cp -v /tmp/config/server.cfg cfg/ \
     && cp -v /tmp/config/mapcycle.txt cfg/ \
     && cp -v /tmp/config/rcbot2.ini addons/rcbot2/config/config.ini \
+    && cp -v /tmp/config/bot_quota.ini addons/rcbot2/config/ \
+    && rm -v addons/rcbot2/profiles/*ini \
+    && cp -v /tmp/config/profiles/*.ini addons/rcbot2/profiles/ \
+    && cp -v /tmp/config/admins_simple.ini addons/sourcemod/configs/ \
     && cp -v /tmp/config/startup.sh ../ \
     && chmod 755 ../startup.sh \
     && mkdir maps/graphs \
