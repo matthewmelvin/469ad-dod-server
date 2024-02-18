@@ -2,7 +2,6 @@ dod_avalanche
 dod_donner
 dod_argentan
 dod_lennon
-dod_salerno
 dod_flash
 dod_anzio
 dod_kalt
