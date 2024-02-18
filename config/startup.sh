@@ -2,6 +2,7 @@
 
 cd "$(dirname "$0")"
 
+sudo /etc/init.d/lighttpd start
 port=8082
 
 if [ -n "$LANFLAG" ]; then
@@ -22,14 +23,21 @@ else
 	tok=""
 fi
 
+if [ "$lan" -eq "1" ]; then
+	desc="Mloe's local DoD:S server"
+else
+	desc="469AD's ephemeral DoD:S server"
+fi
+
 map=$(grep ^dod_ dod/cfg/mapcycle.txt | head -1 | tee /dev/stderr)
 
-sudo /etc/init.d/lighttpd start
 
-echo "sv_downloadurl \"http://$extip:$port/\"" > dod/cfg/downloadurl.txt
+: > dod/cfg/startup.txt
+echo "sv_downloadurl \"http://$extip:$port/\"" >> dod/cfg/startup.txt
+echo "hostname \"$desc\"" >> dod/cfg/startup.txt
 
 ./srcds_run -game dod \
 	-port 27015 +ip 0.0.0.0 \
 	-strictportbind +sv_lan $lan \
 	${tok:++sv_setsteamaccount $tok} \
-	+map $map +exec downloadurl.txt
+	+map $map +exec startup.txt
