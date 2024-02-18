@@ -26,7 +26,7 @@ map=$(grep ^dod_ dod/cfg/mapcycle.txt | head -1 | tee /dev/stderr)
 
 sudo /etc/init.d/lighttpd start
 
-echo "sv_downloadurl \"http://$ip:$port/\"" > dod/cfg/downloadurl.txt
+echo "sv_downloadurl \"http://$extip:$port/\"" > dod/cfg/downloadurl.txt
 
 ./srcds_run -game dod \
 	-port 27015 +ip 0.0.0.0 \
