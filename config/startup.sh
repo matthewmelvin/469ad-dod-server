@@ -48,7 +48,7 @@ echo "hostname \"$desc\"" >> dod/cfg/startup.txt
 # so the mapcycle isn't constantly being sent back to the beginning.
 : > dod/console.log
 (tail -f dod/console.log | while read -r line; do
-	if echo "$line" | grep -q "^Client.*connected"; then
+	if [ "$used" != "1" ] && echo "$line" | grep -q "^Client.*connected"; then
 		echo "The first client has connected..."
 		used=1
 		continue
