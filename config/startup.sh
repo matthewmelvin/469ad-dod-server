@@ -26,15 +26,15 @@ fi
 if [ "$lan" -eq "1" ]; then
 	desc="Mloe's local DoD:S server"
 else
-	desc="469AD's ephemeral DoD:S server"
+	desc="469AD's ephemeral DoD:S server${SRVID:+ ($SRVID)}"
 fi
 
-if [ -s dod/cfg/lastmap.txt ]; then
+if [ -s dod/cfg/lastmap.txt ] && find dod/cfg/lastmap.txt -mmin -20 | grep -q .; then
 	map=$(grep ^dod_ dod/cfg/lastmap.txt | head -1 | tee /dev/stderr)
 fi
 
 if [ -z "$map" ]; then
-	map=$(grep ^dod_ dod/cfg/mapcycle.txt | head -1 | tee /dev/stderr)
+	map=$(grep ^dod_ dod/cfg/mapcycle.txt | shuf -n 1 | tee /dev/stderr)
 fi
 
 : > dod/cfg/startup.txt
