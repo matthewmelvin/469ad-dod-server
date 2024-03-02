@@ -13,14 +13,18 @@ fi
 
 if [ -n "$EXTIP" ]; then
 	extip="$EXTIP"
+	echo "Using external IP from envvar: \"$extip\""
 else
-	extip="$(curl -s ident.me | tee /dev/stderr)"; echo
+	extip="$(curl -s ident.me)"; echo
+	echo "Using external IP from api call: \"$extip\""
 fi
 
 if [ -n "$USERTOK" ]; then
 	tok="$USERTOK"
+	echo "Logging in using provided token..."
 else
 	tok=""
+	echo "Running as an anonymous server..."
 fi
 
 if [ "$lan" -eq "1" ]; then
@@ -30,16 +34,20 @@ else
 fi
 
 if [ -s dod/cfg/lastmap.txt ] && find dod/cfg/lastmap.txt -mmin -20 | grep -q .; then
-	map=$(grep ^dod_ dod/cfg/lastmap.txt | head -1 | tee /dev/stderr)
+	map=$(grep ^dod_ dod/cfg/lastmap.txt | head -1)
+	echo "Using map from lastmap.txt: \"$map\""
 fi
 
 if [ -z "$map" ]; then
-	map=$(grep ^dod_ dod/cfg/mapcycle.txt | shuf -n 1 | tee /dev/stderr)
+	map=$(grep ^dod_ dod/cfg/mapcycle.txt | shuf -n 1)
+	echo "Using map from mapcycle.txt: \"$map\""
 fi
 
 : > dod/cfg/startup.txt
 echo "sv_downloadurl \"http://$extip:$port/\"" >> dod/cfg/startup.txt
 echo "hostname \"$desc\"" >> dod/cfg/startup.txt
+echo "Generated startup.txt config..."
+grep -H . dod/cfg/startup.txt
 
 # For whatever reason, cpu does not go idle when hibernating even after the bots
 # are all kicked out.  But cpu will idle on newly started server until the first
@@ -70,7 +78,7 @@ echo "hostname \"$desc\"" >> dod/cfg/startup.txt
 	fi
 done) &
 
-./srcds_run -condebug -game dod \
+./srcds_run -condebug -norestart -game dod \
 	-port 27015 +ip 0.0.0.0 \
 	-strictportbind +sv_lan $lan \
 	${tok:++sv_setsteamaccount $tok} \
