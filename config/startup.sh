@@ -7,10 +7,8 @@ port=8082
 
 if [ -n "$LANFLAG" ]; then
 	lan="$LANFLAG"
-	echo "Using lan flag from envvar: \"$lan\""
 else
 	lan=1
-	echo "Lan flag set from default: \"$lan\""
 fi
 
 if [ -n "$EXTIP" ]; then
@@ -62,7 +60,7 @@ grep -H . dod/cfg/startup.txt
 		echo "The first client has connected..."
 		used=1
 		continue
-	fi
+        fi
 	last=$(echo "$line" | grep 'Mapchange' | rev | awk '{print $2}' | rev)
 	if [ -n "$last" ]; then
 		echo "Setting last seen map to $last ..."
@@ -80,7 +78,6 @@ grep -H . dod/cfg/startup.txt
 			echo "Waiting to die..."
 			sleep 1;
 		done
-
 	fi
 done) &
 
