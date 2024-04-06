@@ -43,6 +43,10 @@ if [ -z "$map" ] || [ ! -f "dod/maps/${map}.bsp" ]; then
 	echo "Using map from mapcycle.txt: \"$map\""
 fi
 
+if [ ! -f "dod/maps/${map}.bsp" ]; then
+	map=$(find dod/maps/ -name '*.bsp' | shuf -n 1 | sed 's#^.*/##; s/.bsp$//')
+fi
+
 : > dod/cfg/startup.txt
 echo "sv_downloadurl \"http://$extip:$port/\"" >> dod/cfg/startup.txt
 echo "hostname \"$desc\"" >> dod/cfg/startup.txt
