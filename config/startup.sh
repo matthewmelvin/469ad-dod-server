@@ -34,12 +34,12 @@ else
 fi
 
 if [ -s dod/cfg/lastmap.txt ] && find dod/cfg/lastmap.txt -mmin -20 | grep -q .; then
-	map=$(grep ^dod_ dod/cfg/lastmap.txt | head -1)
+	map=$(grep ^[a-z0-9] dod/cfg/lastmap.txt | head -1)
 	echo "Using map from lastmap.txt: \"$map\""
 fi
 
-if [ -z "$map" ]; then
-	map=$(grep ^dod_ dod/cfg/mapcycle.txt | shuf -n 1)
+if [ -z "$map" ] || [ ! -f "dod/maps/${map}.bsp" ]; then
+	map=$(grep ^[a-z0-9] dod/cfg/mapcycle.txt | shuf -n 1)
 	echo "Using map from mapcycle.txt: \"$map\""
 fi
 
