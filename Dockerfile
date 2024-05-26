@@ -71,6 +71,8 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && rm -rf dod_teammanager_source_v1.22_Compil_1.11.0.6502 \
     && mv -v addons/sourcemod/plugins/addon_dodtms_* addons/sourcemod/plugins/disabled/ \
     && mv -v addons/sourcemod/plugins/disabled/addon_dodtms_autobalance.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/dodmedic.phrases.txt admons/sourcemod/translations/ \
     && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_damage_report.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/maps/*.bsp maps/ \
