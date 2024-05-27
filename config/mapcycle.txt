@@ -15,7 +15,9 @@ dod_colmar
 dod_forza_rc1
 dod_palermo
 dod_anvil
-dod_harrington
+dod_rouen
 dod_dust2_slg
 dod_jagd
 dod_marche
+dod_strand
+dod_catania_rc2

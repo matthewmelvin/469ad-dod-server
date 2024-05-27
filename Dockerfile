@@ -26,7 +26,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
   && apt-get update -y \
   && apt-get install -y --no-install-recommends \
     ca-certificates locales \
-    unzip sudo curl \
+    unzip unrar sudo curl \
     vim-tiny less \
     lighttpd \
   && dpkg --add-architecture i386 \
@@ -76,6 +76,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_damage_report.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/maps/*.bsp maps/ \
+    && cd ../ && unrar x /tmp/dod_strand.rar && cd dod/ \
     && cp -v /tmp/waypoints/*.rcw addons/rcbot2/waypoints/dod/ \
     && cp -v /tmp/config/server.cfg cfg/ \
     && cp -v /tmp/config/mapcycle.txt cfg/ \
