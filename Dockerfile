@@ -72,11 +72,11 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && mv -v addons/sourcemod/plugins/addon_dodtms_* addons/sourcemod/plugins/disabled/ \
     && mv -v addons/sourcemod/plugins/disabled/addon_dodtms_autobalance.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
-    && cp -v /tmp/addons/dodmedic.phrases.txt admons/sourcemod/translations/ \
+    && cp -v /tmp/addons/dodmedic.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_damage_report.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/maps/*.bsp maps/ \
-    && cd ../ && unrar x /tmp/dod_strand.rar && cd dod/ \
+    && cd ../ && unrar x /tmp/addons/dod_strand.rar && cd dod/ \
     && cp -v /tmp/waypoints/*.rcw addons/rcbot2/waypoints/dod/ \
     && cp -v /tmp/config/server.cfg cfg/ \
     && cp -v /tmp/config/mapcycle.txt cfg/ \
