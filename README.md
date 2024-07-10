@@ -18,7 +18,7 @@ On the net...
 
 ```
 docker run -d -it -v /tmp:/tmp \
-        -e LANFLAG=0 -e SRVID=AU \
+        -e LANFLAG=0 \
         -e USERTOK=<token> \
         -p 8082:80 -p 27000-27015:27000-27015/udp -p 27015:27015 \
         --name dod-server \
