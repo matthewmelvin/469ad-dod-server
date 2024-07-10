@@ -8,7 +8,7 @@ ENV HOME /home/$USER
 # sourcemod - https://wiki.alliedmods.net/Installing_sourcemod
 # dod:s damage report - https://forums.alliedmods.net/showthread.php?p=1765621
 # delay hibertnate - https://forums.alliedmods.net/showthread.php?p=2740332
-# team balance - https://forums.alliedmods.net/showthread.php?t=344089
+# team balance - https://forums.alliedmods.net/showpost.php?p=775579&postcount=34
 # extra maps - https://www.dodbits.com/dods/index.php/downloads/category/38-rcbot2-waypoints
 #   RCBot2_75_custom_dods_maps - https://www.dodbits.com/dods/index.php/downloads/summary/43-rcbot2-installation-packages/198-rcbot2-map-pack-1
 #   RCBot2_map_pack_2 - https://www.dodbits.com/dods/index.php/downloads/summary/43-rcbot2-installation-packages/199-rcbot2-map-pack-2
@@ -66,11 +66,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && mv addons/sourcemod/plugins/disabled/basetriggers.smx addons/sourcemod/plugins/ \
     && mv addons/sourcemod/plugins/disabled/clientprefs.smx addons/sourcemod/plugins/ \
     && unzip /tmp/addons/delayhibernate.zip \
-    && unzip /tmp/addons/dod_teammanager_source_v1.22_Compil_1.11.0.6502.zip \
-    && cp -av dod_teammanager_source_v1.22_Compil_1.11.0.6502/dod/* ./ \
-    && rm -rf dod_teammanager_source_v1.22_Compil_1.11.0.6502 \
-    && mv -v addons/sourcemod/plugins/addon_dodtms_* addons/sourcemod/plugins/disabled/ \
-    && mv -v addons/sourcemod/plugins/disabled/addon_dodtms_autobalance.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/dodsbalancer.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dodmedic.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
