@@ -21,3 +21,5 @@ dod_jagd
 dod_marche
 dod_strand
 dod_catania_rc2
+dod_kaust
+dod_snowbridge_explode_8
