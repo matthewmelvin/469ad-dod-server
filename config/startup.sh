@@ -34,18 +34,24 @@ else
 fi
 
 if [ -s dod/cfg/lastmap.txt ] && find dod/cfg/lastmap.txt -mmin -20 | grep -q .; then
-	map=$(grep ^[a-z0-9] dod/cfg/lastmap.txt | head -1)
-	echo "Using map from lastmap.txt: \"$map\""
+	map=$(grep "^[a-z0-9]" dod/cfg/lastmap.txt | head -1)
+	echo "Using map from last seen file: \"$map\""
 fi
 
 if [ -z "$map" ] || [ ! -f "dod/maps/${map}.bsp" ]; then
-	map=$(grep ^[a-z0-9] dod/cfg/mapcycle.txt | shuf -n 1)
-	echo "Using map from mapcycle.txt: \"$map\""
+	echo "No last map.  Shuffling map cycle file..."
+	shuf dod/cfg/mapcycle.txt > dod/cfg/mapcycle.tmp
+	mv dod/cfg/mapcycle.tmp dod/cfg/mapcycle.txt
+	map=$(grep "^[a-z0-9]" dod/cfg/mapcycle.txt | head -1)
+	echo "Using map from map cycle file: \"$map\""
 fi
 
-if [ ! -f "dod/maps/${map}.bsp" ]; then
+if [ -z "$map" ] || [ ! -f "dod/maps/${map}.bsp" ]; then
 	map=$(find dod/maps/ -name '*.bsp' | shuf -n 1 | sed 's#^.*/##; s/.bsp$//')
+	echo "Using map from maps directory: \"$map\""
 fi
+
+echo "$map" > dod/cfg/lastmap.txt
 
 : > dod/cfg/startup.txt
 echo "sv_downloadurl \"http://$extip:$port/\"" >> dod/cfg/startup.txt
@@ -67,7 +73,7 @@ grep -H . dod/cfg/startup.txt
         fi
 	last=$(echo "$line" | grep 'Mapchange' | rev | awk '{print $2}' | rev)
 	if [ -n "$last" ]; then
-		echo "Setting last seen map to $last ..."
+		echo "Saving last seen map to file: \"$last"\"
 		echo "$last" > dod/cfg/lastmap.txt
 		continue
 	fi
@@ -76,6 +82,8 @@ grep -H . dod/cfg/startup.txt
 			echo "Server not used, letting hibernate..."
 			continue
 		fi
+		echo "Removing last map tracking file..."
+		rm -v dod/cfg/lastmap.txt
 		echo "Shutting down container via kill..."
 		ps auxwww | awk '/[s]rcds_/{print $2}' | xargs -r kill
 		while true; do
