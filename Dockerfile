@@ -7,6 +7,7 @@ ENV HOME /home/$USER
 # rcbots - https://github.com/APGRoboCop/rcbot2
 # sourcemod - https://wiki.alliedmods.net/Installing_sourcemod
 # dod:s damage report - https://forums.alliedmods.net/showthread.php?p=1765621
+# dod:s fireworks  - https://forums.alliedmods.net/showthread.php?p=740274
 # delay hibertnate - https://forums.alliedmods.net/showthread.php?p=2740332
 # team balance - https://forums.alliedmods.net/showpost.php?p=775579&postcount=34
 # extra maps - https://www.dodbits.com/dods/index.php/downloads/category/38-rcbot2-waypoints
@@ -68,12 +69,15 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && unzip /tmp/addons/delayhibernate.zip \
     && cp -v /tmp/addons/dodsbalancer.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/dod_fireworks.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dodmedic.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_damage_report.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/maps/*.bsp maps/ \
     && cd ../ && unrar x /tmp/addons/dod_strand.rar && cd dod/ \
     && cp -v /tmp/waypoints/*.rcw addons/rcbot2/waypoints/dod/ \
+    && cp -v /tmp/config/motd.cfg cfg/ \
+    && cp -v /tmp/config/motd_text.cfg cfg/ \
     && cp -v /tmp/config/server.cfg cfg/ \
     && cp -v /tmp/config/mapcycle.txt cfg/ \
     && cp -v /tmp/config/rcbot2.ini addons/rcbot2/config/config.ini \
