@@ -33,15 +33,30 @@ else
 	desc="469AD's ephemeral DoD:S server${SRVID:+ ($SRVID)}"
 fi
 
-if [ -s dod/cfg/lastmap.txt ] && find dod/cfg/lastmap.txt -mmin -20 | grep -q .; then
-	map=$(grep "^[a-z0-9]" dod/cfg/lastmap.txt | head -1)
-	echo "Using map from last seen file: \"$map\""
-fi
-
-if [ -z "$map" ] || [ ! -f "dod/maps/${map}.bsp" ]; then
-	echo "No last map.  Shuffling map cycle file..."
+if find dod/cfg/mapcycle.txt -mmin -1380 | grep -q .; then
+	echo "Shuffling map cycle file..."
 	shuf dod/cfg/mapcycle.txt > dod/cfg/mapcycle.tmp
 	mv dod/cfg/mapcycle.tmp dod/cfg/mapcycle.txt
+fi
+
+if [ -s dod/cfg/lastmap.txt ]; then
+	if find dod/cfg/lastmap.txt -mmin -10 | grep -q .; then
+		# start the last map over if in first 10 minutes
+		map=$(grep "^[a-z0-9]" dod/cfg/lastmap.txt | head -1)
+		echo "Using map from last seen file: \"$map\""
+	elif find dod/cfg/lastmap.txt -mmin -20 | grep -q .; then
+		# skip to next map in the list if time was almost up
+		map=$(grep "^[a-z0-9]" dod/cfg/lastmap.txt | head -1)
+		echo "Using next map after last seen: \"$map\""
+		map=$(grep -A 1 "^${map}$" dod/cfg/mapcycle.txt | grep -v "^${map}$")
+		if [ -z "$map" ]; then
+			map=$(grep "^[a-z0-9]" dod/cfg/mapcycle.txt | head -1)
+		fi
+		echo "Using next map from map cycle file: \"$map\""
+	fi
+fi
+	
+if [ -z "$map" ] || [ ! -f "dod/maps/${map}.bsp" ]; then
 	map=$(grep "^[a-z0-9]" dod/cfg/mapcycle.txt | head -1)
 	echo "Using map from map cycle file: \"$map\""
 fi
