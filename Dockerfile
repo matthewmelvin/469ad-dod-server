@@ -31,8 +31,10 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     vim-tiny less \
     lighttpd \
     software-properties-common \
+  && ln -s vi /usr/bin/vim \
   && add-apt-repository multiverse \
   && dpkg --add-architecture i386 \
+  && echo "deb http://security.ubuntu.com/ubuntu focal-security main universe" > /etc/apt/sources.list.d/ubuntu-focal-sources.list \
   && apt-get update -y \
   && apt-get install -y --no-install-recommends \
     steamcmd \
@@ -55,9 +57,9 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && steamcmd +set_download_throttle 75000 +force_install_dir $HOME/dod-server +login anonymous +app_update 232290 +quit \
     && cd $HOME/dod-server/dod \
     && find /tmp \
-    && tar -xzvf /tmp/addons/mmsource-2.0.0-git1333-linux.tar.gz \
+    && tar -xzvf /tmp/addons/mmsource-2.0.0-git1334-linux.tar.gz \
     && unzip /tmp/addons/rcbot2.zip \
-    && tar -xzvf /tmp/addons/sourcemod-1.13.0-git7213-linux.tar.gz \
+    && tar -xzvf /tmp/addons/sourcemod-1.13.0-git7219-linux.tar.gz \
     && mv -v addons/sourcemod/plugins/*.smx addons/sourcemod/plugins/disabled/ \
     && mv addons/sourcemod/plugins/disabled/admin-flatfile.smx addons/sourcemod/plugins/ \
     && mv addons/sourcemod/plugins/disabled/adminhelp.smx addons/sourcemod/plugins/ \
@@ -66,19 +68,30 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && mv addons/sourcemod/plugins/disabled/basecommands.smx addons/sourcemod/plugins/ \
     && mv addons/sourcemod/plugins/disabled/basetriggers.smx addons/sourcemod/plugins/ \
     && mv addons/sourcemod/plugins/disabled/clientprefs.smx addons/sourcemod/plugins/ \
+    && unzip /tmp/addons/delayhibernate.zip \
+    && cp -v /tmp/addons/dodsbalancer.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/dod_fireworks.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/dodmedic.phrases.txt addons/sourcemod/translations/ \
+    && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/dod_damage_report.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/maps/*.bsp maps/ \
     && cd ../ && unrar x /tmp/addons/dod_strand.rar && cd dod/ \
     && cp -v /tmp/waypoints/*.rcw addons/rcbot2/waypoints/dod/ \
-    && cp -v /tmp/config/motd.cfg cfg/ \
-    && cp -v /tmp/config/motd_text.cfg cfg/ \
+    && cp -v /tmp/config/motd.txt cfg/ \
+    && cp -v /tmp/config/motd_text.txt cfg/ \
     && cp -v /tmp/config/server.cfg cfg/ \
     && cp -v /tmp/config/mapcycle.txt cfg/ \
-    && cp -v /tmp/config/startup.sh ../ \
     && cp -v /tmp/config/rcbot2.ini addons/rcbot2/config/config.ini \
+    && cp -v /tmp/config/hookinfo.ini addons/rcbot2/config/hookinfo.ini \
     && cp -v /tmp/config/bot_quota.ini addons/rcbot2/config/ \
+    && rm -rvf addons/rcbot2/waypoints/hl2mp \
+    && rm -rvf addons/rcbot2/waypoints/synergy \
+    && rm -rvf addons/rcbot2/waypoints/tf \
     && rm -v addons/rcbot2/profiles/*ini \
     && cp -v /tmp/config/profiles/*.ini addons/rcbot2/profiles/ \
     && cp -v /tmp/config/admins_simple.ini addons/sourcemod/configs/ \
+    && cp -v /tmp/config/startup.sh ../ \
     && chmod 755 ../startup.sh \
     && mkdir maps/graphs \
     && ln -s . maps/maps" \
@@ -92,11 +105,3 @@ WORKDIR $HOME/dod-server
 # use a script so command can be edited without a rebuild
 ENTRYPOINT ["/bin/bash"]
 CMD ["./startup.sh"]
-
-#    && unzip /tmp/addons/delayhibernate.zip \
-#    && cp -v /tmp/addons/dodsbalancer.smx addons/sourcemod/plugins/ \
-#    && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
-#    && cp -v /tmp/addons/dod_fireworks.smx addons/sourcemod/plugins/ \
-#    && cp -v /tmp/addons/dodmedic.phrases.txt addons/sourcemod/translations/ \
-#    && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
-#    && cp -v /tmp/addons/dod_damage_report.phrases.txt addons/sourcemod/translations/ \
