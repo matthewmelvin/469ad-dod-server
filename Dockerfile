@@ -3,24 +3,6 @@ FROM ubuntu:24.04
 ENV USER steam
 ENV HOME /home/$USER
 
-# metamod - https://github.com/alliedmodders/metamod-source
-# rcbots - https://github.com/APGRoboCop/rcbot2
-# sourcemod - https://github.com/alliedmodders/sourcemod
-# dod:s damage report - https://forums.alliedmods.net/showthread.php?p=1765621
-# dod:s fireworks  - https://forums.alliedmods.net/showthread.php?p=740274
-# delay hibertnate - https://forums.alliedmods.net/showthread.php?p=2740332
-# team balance - https://forums.alliedmods.net/showpost.php?p=775579&postcount=34
-# extra maps - https://www.dodbits.com/dods/index.php/downloads/category/38-rcbot2-waypoints
-#   RCBot2_75_custom_dods_maps - https://www.dodbits.com/dods/index.php/downloads/summary/43-rcbot2-installation-packages/198-rcbot2-map-pack-1
-#   RCBot2_map_pack_2 - https://www.dodbits.com/dods/index.php/downloads/summary/43-rcbot2-installation-packages/199-rcbot2-map-pack-2
-# extra waypoints - https://www.dodbits.com/dods/index.php/downloads/category/38-rcbot2-waypoints
-#   september_2023_rcbot2_all_waypoints_pack - https://www.dodbits.com/dods/index.php/downloads/category/38-rcbot2-waypoints
-COPY config/ /tmp/config
-COPY addons/ /tmp/addons
-COPY maps/ /tmp/maps
-COPY waypoints/ /tmp/waypoints
-
-# mush everything together into one run layer
 ARG DEBIAN_FRONTEND=noninteractive
 RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
   && echo steam steam/license note '' | debconf-set-selections \
@@ -37,6 +19,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
   && echo "deb http://security.ubuntu.com/ubuntu focal-security main universe" > /etc/apt/sources.list.d/ubuntu-focal-sources.list \
   && apt-get update -y \
   && apt-get install -y --no-install-recommends \
+    libcurl4:i386 libncurses5:i386 libsdl2-2.0-0:i386 \
     steamcmd \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
@@ -54,12 +37,19 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && ln -s $HOME/.steam/sdk32/steamclient.so $HOME/.steam/sdk32/steamservice.so \
     && ln -s $HOME/.steam/sdk64/steamclient.so $HOME/.steam/sdk64/steamservice.so \
     && mkdir dod-server \
-    && steamcmd +set_download_throttle 75000 +force_install_dir $HOME/dod-server +login anonymous +app_update 232290 +quit \
-    && cd $HOME/dod-server/dod \
+    && steamcmd +set_download_throttle 75000 +force_install_dir $HOME/dod-server +login anonymous +app_update 232290 +quit"
+
+COPY config/ /tmp/config
+COPY addons/ /tmp/addons
+COPY maps/ /tmp/maps
+COPY waypoints/ /tmp/waypoints
+
+RUN su - $USER -c "cd $HOME/dod-server/dod \
     && find /tmp \
-    && tar -xzvf /tmp/addons/mmsource-2.0.0-git1334-linux.tar.gz \
-    && unzip /tmp/addons/rcbot2.zip \
-    && tar -xzvf /tmp/addons/sourcemod-1.13.0-git7219-linux.tar.gz \
+    && tar -xzvf /tmp/addons/mmsource-1.12.0-git1217-linux.tar.gz \
+    && unzip /tmp/addons/rcbot2-v1.7-beta6.zip \
+    && unzip /tmp/addons/accelerator-2.5.0-git138-cd575aa-linux.zip \
+    && tar -xzvf /tmp/addons/sourcemod-1.12.0-git7196-linux.tar.gz \
     && mv -v addons/sourcemod/plugins/*.smx addons/sourcemod/plugins/disabled/ \
     && mv addons/sourcemod/plugins/disabled/admin-flatfile.smx addons/sourcemod/plugins/ \
     && mv addons/sourcemod/plugins/disabled/adminhelp.smx addons/sourcemod/plugins/ \
@@ -69,8 +59,10 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && mv addons/sourcemod/plugins/disabled/basetriggers.smx addons/sourcemod/plugins/ \
     && mv addons/sourcemod/plugins/disabled/clientprefs.smx addons/sourcemod/plugins/ \
     && unzip /tmp/addons/delayhibernate.zip \
+    && unzip /tmp/addons/dodsfixchangelevel_win_linux_24022025.zip \
     && cp -v /tmp/addons/dodsbalancer.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/sm_dod_pistols.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_fireworks.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dodmedic.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
@@ -85,10 +77,16 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
     && cp -v /tmp/config/rcbot2.ini addons/rcbot2/config/config.ini \
     && cp -v /tmp/config/hookinfo.ini addons/rcbot2/config/hookinfo.ini \
     && cp -v /tmp/config/bot_quota.ini addons/rcbot2/config/ \
-    && rm -rvf addons/rcbot2/waypoints/hl2mp \
-    && rm -rvf addons/rcbot2/waypoints/synergy \
-    && rm -rvf addons/rcbot2/waypoints/tf \
+    && rm -rf addons/rcbot2/waypoints/hl2mp \
+              addons/rcbot2/waypoints/synergy \
+              addons/rcbot2/waypoints/tf \
+              addons/rcbot2/manual \
+    && rm -v addons/rcbot2/bin/rcbot.2.hl2dm.* \
+             addons/rcbot2/bin/rcbot.2.tf2.* \
+    && rm -rvf addons/metamod/bin/linux64/ \
+               addons/metamod_x64.vdf \
     && rm -v addons/rcbot2/profiles/*ini \
+    && cp -v /tmp/config/sourcemod_core.cfg addons/sourcemod/configs/core.cfg \
     && cp -v /tmp/config/profiles/*.ini addons/rcbot2/profiles/ \
     && cp -v /tmp/config/admins_simple.ini addons/sourcemod/configs/ \
     && cp -v /tmp/config/startup.sh ../ \
