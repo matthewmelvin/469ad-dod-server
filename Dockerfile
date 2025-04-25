@@ -19,7 +19,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
   && echo "deb http://security.ubuntu.com/ubuntu focal-security main universe" > /etc/apt/sources.list.d/ubuntu-focal-sources.list \
   && apt-get update -y \
   && apt-get install -y --no-install-recommends \
-    libcurl4:i386 libncurses5:i386 libsdl2-2.0-0:i386 \
+    libncurses5:i386 libsdl2-2.0-0:i386 \
     steamcmd \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
@@ -47,9 +47,18 @@ COPY waypoints/ /tmp/waypoints
 RUN su - $USER -c "cd $HOME/dod-server/dod \
     && find /tmp \
     && tar -xzvf /tmp/addons/mmsource-1.12.0-git1217-linux.tar.gz \
+    && rm -rvf addons/metamod/bin/linux64/ \
+               addons/metamod_x64.vdf \
     && unzip /tmp/addons/rcbot2-v1.7-beta6.zip \
-    && unzip /tmp/addons/accelerator-2.5.0-git138-cd575aa-linux.zip \
+    && rm -rf addons/rcbot2/waypoints/hl2mp \
+              addons/rcbot2/waypoints/synergy \
+              addons/rcbot2/waypoints/tf \
+              addons/rcbot2/manual \
+              addons/rcbot2/waypoints/dod/* \
+              addons/rcbot2/profiles/*ini \
     && tar -xzvf /tmp/addons/sourcemod-1.12.0-git7196-linux.tar.gz \
+    && rm -rf addons/sourcemod/bin/x64 \
+              addons/sourcemod/bin/x64 \
     && mv -v addons/sourcemod/plugins/*.smx addons/sourcemod/plugins/disabled/ \
     && mv addons/sourcemod/plugins/disabled/admin-flatfile.smx addons/sourcemod/plugins/ \
     && mv addons/sourcemod/plugins/disabled/adminhelp.smx addons/sourcemod/plugins/ \
@@ -77,16 +86,6 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && cp -v /tmp/config/rcbot2.ini addons/rcbot2/config/config.ini \
     && cp -v /tmp/config/hookinfo.ini addons/rcbot2/config/hookinfo.ini \
     && cp -v /tmp/config/bot_quota.ini addons/rcbot2/config/ \
-    && rm -rf addons/rcbot2/waypoints/hl2mp \
-              addons/rcbot2/waypoints/synergy \
-              addons/rcbot2/waypoints/tf \
-              addons/rcbot2/manual \
-    && rm -v addons/rcbot2/bin/rcbot.2.hl2dm.* \
-             addons/rcbot2/bin/rcbot.2.tf2.* \
-    && rm -rvf addons/metamod/bin/linux64/ \
-               addons/metamod_x64.vdf \
-    && rm -v addons/rcbot2/profiles/*ini \
-    && cp -v /tmp/config/sourcemod_core.cfg addons/sourcemod/configs/core.cfg \
     && cp -v /tmp/config/profiles/*.ini addons/rcbot2/profiles/ \
     && cp -v /tmp/config/admins_simple.ini addons/sourcemod/configs/ \
     && cp -v /tmp/config/startup.sh ../ \
