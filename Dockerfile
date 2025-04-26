@@ -42,19 +42,18 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
 COPY config/ /tmp/config
 COPY addons/ /tmp/addons
 COPY maps/ /tmp/maps
-COPY waypoints/ /tmp/waypoints
 
 RUN su - $USER -c "cd $HOME/dod-server/dod \
     && find /tmp \
-    && tar -xzvf /tmp/addons/mmsource-1.12.0-git1217-linux.tar.gz \
+    && tar -xzvf /tmp/addons/mmsource-2.0.0-git1348-linux.tar.gz \
     && rm -rvf addons/metamod/bin/linux64/ \
+               addons/metamod/bin/linuxsteamrt64 \
                addons/metamod_x64.vdf \
-    && unzip /tmp/addons/rcbot2-v1.7-beta6.zip \
+    && unzip /tmp/addons/rcbot2alpha5.zip \
     && rm -rf addons/rcbot2/waypoints/hl2mp \
               addons/rcbot2/waypoints/synergy \
               addons/rcbot2/waypoints/tf \
               addons/rcbot2/manual \
-              addons/rcbot2/waypoints/dod/* \
               addons/rcbot2/profiles/*ini \
     && tar -xzvf /tmp/addons/sourcemod-1.12.0-git7196-linux.tar.gz \
     && rm -rf addons/sourcemod/bin/x64 \
@@ -69,6 +68,7 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && mv addons/sourcemod/plugins/disabled/clientprefs.smx addons/sourcemod/plugins/ \
     && unzip /tmp/addons/delayhibernate.zip \
     && unzip /tmp/addons/dodsfixchangelevel_win_linux_24022025.zip \
+    && cp -v /tmp/addons/dod_nobotsinendgame.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dodsbalancer.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_pistols.smx addons/sourcemod/plugins/ \
@@ -78,7 +78,6 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && cp -v /tmp/addons/dod_damage_report.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/maps/*.bsp maps/ \
     && cd ../ && unrar x /tmp/addons/dod_strand.rar && cd dod/ \
-    && cp -v /tmp/waypoints/*.rcw addons/rcbot2/waypoints/dod/ \
     && cp -v /tmp/config/motd.txt cfg/ \
     && cp -v /tmp/config/motd_text.txt cfg/ \
     && cp -v /tmp/config/server.cfg cfg/ \
