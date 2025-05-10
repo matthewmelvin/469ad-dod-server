@@ -69,6 +69,7 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && mv addons/sourcemod/plugins/disabled/clientprefs.smx addons/sourcemod/plugins/ \
     && unzip /tmp/addons/delayhibernate.zip \
     && unzip /tmp/addons/dodsfixchangelevel_win_linux_24022025.zip \
+    && cp -v /tmp/addons/dod_unstickoriginbots.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/hlstatsx.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/superlogs-dods.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_nobotsinendgame.smx addons/sourcemod/plugins/ \
