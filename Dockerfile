@@ -26,6 +26,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
   && locale-gen en_US.UTF-8 \
   && ln -s /usr/games/steamcmd /usr/bin/steamcmd \
   && sed -i -e "s#/var/www/html#$HOME/dod-server/dod/maps#" /etc/lighttpd/lighttpd.conf \
+  && sed -i -e 's/^\(server.port[[:space:]]*=[[:space:]]*\).*/\18082/' /etc/lighttpd/lighttpd.conf \
   && useradd -r -m -c "Steam User" $USER -s /bin/bash \
   && usermod www-data -G $USER \
   && printf "Defaults:%s !requiretty\n" $USER > /etc/sudoers.d/$USER \
@@ -68,6 +69,8 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && mv addons/sourcemod/plugins/disabled/clientprefs.smx addons/sourcemod/plugins/ \
     && unzip /tmp/addons/delayhibernate.zip \
     && unzip /tmp/addons/dodsfixchangelevel_win_linux_24022025.zip \
+    && cp -v /tmp/addons/hlstatsx.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/superlogs-dods.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_nobotsinendgame.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dodsbalancer.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
