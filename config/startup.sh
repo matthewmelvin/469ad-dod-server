@@ -19,12 +19,28 @@ else
 	echo "Using external IP from api call: \"$extip\""
 fi
 
+if [ -n "$LCLIP" ]; then
+	lclip="$LCLIP"
+	echo "Using local IP from envvar: \"$lclip\""
+else
+	lclip="$extip"
+	echo "Using external IP as local IP: \"$lclip\""
+fi
+
 if [ -n "$USERTOK" ]; then
 	tok="$USERTOK"
 	echo "Logging in using provided token..."
 else
 	tok=""
 	echo "Running as an anonymous server..."
+fi
+
+if [ -n "$RCONPASS" ]; then
+	rcon="$RCONPASS"
+	echo "Using provided rcon password...."
+else
+	rcon="$(tr -cd 'a-zA-Z0-9' < /dev/random | head -c10)"
+	echo "Using generated rcon password...."
 fi
 
 if [ "$lan" -eq "1" ]; then
@@ -68,9 +84,12 @@ fi
 
 echo "$map" > dod/cfg/lastmap.txt
 
-: > dod/cfg/startup.txt
-echo "sv_downloadurl \"http://$extip:$port/\"" >> dod/cfg/startup.txt
-echo "hostname \"$desc\"" >> dod/cfg/startup.txt
+(
+	echo "sv_downloadurl \"http://$extip:$port/\""
+	echo "hostname \"$desc\""
+	echo "logaddress_add $lclip:27500"
+	echo "rcon_password \"$rcon\""
+) > dod/cfg/startup.txt
 echo "Generated startup.txt config..."
 grep -H . dod/cfg/startup.txt
 
