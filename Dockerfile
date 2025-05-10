@@ -56,6 +56,7 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
               addons/rcbot2/waypoints/tf \
               addons/rcbot2/manual \
               addons/rcbot2/profiles/*ini \
+    && cp -v /tmp/addons/{rcbot.2.dods.so,RCBot2Meta_i486.so} addons/rcbot2/bin/ \
     && tar -xzvf /tmp/addons/sourcemod-1.12.0-git7196-linux.tar.gz \
     && rm -rf addons/sourcemod/bin/x64 \
               addons/sourcemod/bin/x64 \
