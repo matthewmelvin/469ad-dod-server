@@ -5,8 +5,9 @@ Description:
 	Keeps DOD:S teams the same size
 
 Versions:
-	1.0.1	* add max team difference by [BzzB]HGSteiner
-	1.0	* Initial Release
+	1.0.1+bots	* concider humans seperately from bots
+	1.0.1		* add max team difference by [BzzB]HGSteiner
+	1.0		* Initial Release
 		
 */
 
@@ -16,7 +17,7 @@ Versions:
 
 #pragma semicolon 1
 
-#define PLUGIN_VERSION "1.0.1"
+#define PLUGIN_VERSION "1.0.1+bots"
 
 #define TEAM_1 2
 #define TEAM_2 3
@@ -25,8 +26,8 @@ Versions:
 public Plugin:myinfo = 
 {
 	name = "DOD:S Balancer",
-	author = "AMP",
-	description = "Keeps DOD:S teams the same size",
+	author = "AMP + Mloe",
+	description = "Keeps DOD:S teams (roughly) even",
 	version = PLUGIN_VERSION,
 	url = "http://forums.alliedmods.net"
 };
@@ -56,6 +57,7 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 		return;
 		
 	new victimClient = GetClientOfUserId(GetEventInt(event, "userid"));
+	new victimFake = IsFakeClient(victimClient);
 
 	// Admins are immune
 	if(GetUserAdmin(victimClient) != INVALID_ADMIN_ID)
@@ -65,6 +67,7 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 	new team1;
 	new team2;
 	for (new i = 1; i < GetMaxClients(); i++) {
+		if (!victimFake && IsFakeClient(i)) continue;
 		if(IsClientInGame(i)){
 			if(GetClientTeam(i) == TEAM_1)
 				team1++;
@@ -96,7 +99,9 @@ public GetOtherTeam(team)
 // We switch the teams after the death event 
 public Action:TimerSwitchTeam(Handle:timer, any:client)
 {
+	decl String:clientName[64];
 	ChangeClientTeam(client, GetOtherTeam(GetClientTeam(client)));
-		
+	GetClientName(client, clientName, sizeof(clientName));
+	PrintToChatAll("\x04[DODS_Balance]\x01 %s has been switched to balance the teams.", clientName);
 	return Plugin_Handled;
 }
