@@ -63,7 +63,7 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 	GetClientName(victimClient, victimName, sizeof(victimName));
 	new victimFake = IsFakeClient(victimClient);
 	if (GetConVarBool(dbugEnabled)) {
-		if (!victimFake) 
+		if (!victimFake)
 			PrintToServer("[NewBal] %s is a human. Ignoring bots in the team count.", victimName);
 		else
 			PrintToServer("[NewBal] %s is a bot. Including all in the team count.", victimName);
@@ -81,7 +81,6 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 		else if (GetClientTeam(i) == TEAM_2)
 			team2++;
 	}
-
 
 	new maxDiff = GetConVarInt(maxteamdiff);
 	if (maxDiff < 1 || maxDiff > 5) {
