@@ -13,13 +13,12 @@ Versions:
 		
 */
 
-
 #include <sourcemod>
 #include <sdktools>
 
 #pragma semicolon 1
 
-#define PLUGIN_VERSION "1.0.2"
+#define PLUGIN_VERSION "1.1.0"
 
 #define TEAM_1 2
 #define TEAM_2 3
