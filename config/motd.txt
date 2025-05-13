@@ -33,9 +33,10 @@ Weekends: 11am to 11pm GMT+10
 <SPAN class=classbodynote align=center>
 <BR>
 <P>
-<B>THE SERVER CRASHES PRETTY OFTEN SINCE THE UPDATE<B>
+<B>With some new bot fixes the crashing issue appears solved.<B>
 <BR>
-It'll restart in just a few moments - please rejoin.
+<BR>
+Play on! :)
 </P>
 </SPAN>
 </BODY></HTML>

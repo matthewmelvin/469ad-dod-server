@@ -10,6 +10,6 @@ Otherwise it's probably less hassle to kick people than deal with them spoiling 
                          Weekdays:  5pm to 11pm GMT+10
                          Weekends: 11am to 11pm GMT+10
 
+            With some new bot fixes the crashing issue appears solved.
 
-              THE SERVER CRASHES PRETTY OFTEN SINCE THE UPDATE
-             It'll restart in just a few moments - please rejoin.
+                                  Play on! :)
