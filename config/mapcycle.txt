@@ -23,3 +23,9 @@ dod_lennon
 dod_catania_rc2
 dod_kaust
 dod_snowbridge_explode_8
+dod_avalanche@night
+dod_harrington
+dod_hunt_b4
+dod_ingot_b6
+dod_stug
+dod_vigilance
