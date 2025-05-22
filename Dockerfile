@@ -42,7 +42,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
 
 COPY config/ /tmp/config
 COPY addons/ /tmp/addons
-COPY maps/ /tmp/maps
+COPY waypoints/ /tmp/waypoints
 
 RUN su - $USER -c "cd $HOME/dod-server/dod \
     && find /tmp \
@@ -56,6 +56,7 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
               addons/rcbot2/waypoints/tf \
               addons/rcbot2/manual \
               addons/rcbot2/profiles/*ini \
+    && cp -v /tmp/waypoints/*.rcw addons/rcbot2/waypoints/dod/ \
     && cp -v /tmp/addons/{rcbot.2.dods.so,RCBot2Meta_i486.so} addons/rcbot2/bin/ \
     && tar -xzvf /tmp/addons/sourcemod-1.12.0-git7196-linux.tar.gz \
     && rm -rf addons/sourcemod/bin/x64 \
@@ -81,8 +82,6 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && cp -v /tmp/addons/dodmedic.phrases.txt addons/sourcemod/translations/ \
     && cp -v /tmp/addons/dod_damage_report.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_damage_report.phrases.txt addons/sourcemod/translations/ \
-    && cp -v /tmp/maps/*.bsp maps/ \
-    && cd ../ && unrar x /tmp/addons/dod_strand.rar && cd dod/ \
     && cp -v /tmp/config/motd.txt cfg/ \
     && cp -v /tmp/config/motd_text.txt cfg/ \
     && cp -v /tmp/config/server.cfg cfg/ \
