@@ -44,11 +44,17 @@ else
 fi
 
 if [ "$lan" -eq "1" ]; then
-	desc="Mloe's local DoD:S server"
+	desc="Mloe's local DoD:S server${SRVID:+ ($SRVID)}"
 else
 	desc="469AD's ephemeral DoD:S server${SRVID:+ ($SRVID)}"
 fi
 
+# make sure any custom maps are linked
+find dod/custom -name '*.bsp' | cut -f2- -d/  | while read map; do
+	(cd dod/maps && [ ! -e "$(basename $map)" ] && ln -sv "../$map" .)
+done
+
+# shuffle the map on the first startup of the day
 if find dod/cfg/mapcycle.txt -mmin -1380 | grep -q .; then
 	echo "Shuffling map cycle file..."
 	shuf dod/cfg/mapcycle.txt > dod/cfg/mapcycle.tmp
@@ -61,7 +67,7 @@ if [ -s dod/cfg/lastmap.txt ]; then
 		map=$(grep "^[a-z0-9]" dod/cfg/lastmap.txt | head -1)
 		echo "Using map from last seen file: \"$map\""
 	elif find dod/cfg/lastmap.txt -mmin -20 | grep -q .; then
-		# skip to next map in the list if time was almost up
+		# skip to next map in the list if its been a while
 		map=$(grep "^[a-z0-9]" dod/cfg/lastmap.txt | head -1)
 		echo "Using next map after last seen: \"$map\""
 		map=$(grep -A 1 "^${map}$" dod/cfg/mapcycle.txt | grep -v "^${map}$")
@@ -69,6 +75,9 @@ if [ -s dod/cfg/lastmap.txt ]; then
 			map=$(grep "^[a-z0-9]" dod/cfg/mapcycle.txt | head -1)
 		fi
 		echo "Using next map from map cycle file: \"$map\""
+	else
+		# lastmap.txt is more than 20 minutes old
+		echo "Ignoring last seen file as too old."
 	fi
 fi
 	
