@@ -54,6 +54,12 @@ find dod/custom -name '*.bsp' | cut -f2- -d/  | while read map; do
 	(cd dod/maps && [ ! -e "$(basename $map)" ] && ln -sv "../$map" .)
 done
 
+# make sure all the maps are in the mapcycle
+if [ "$(wc -l < dod/cfg/mapcycle.txt)" -ne "$(ls dod/maps/*.bsp | wc -l)" ]; then
+	echo "Updating map cycle file..."
+	(cd dod/maps && ls *.bsp) | sed 's/.bsp$//' | shuf > dod/cfg/mapcycle.txt
+fi
+
 # shuffle the map on the first startup of the day
 if find dod/cfg/mapcycle.txt -mmin -1380 | grep -q .; then
 	echo "Shuffling map cycle file..."
