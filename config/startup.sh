@@ -61,7 +61,7 @@ if [ "$(wc -l < dod/cfg/mapcycle.txt)" -ne "$(ls dod/maps/*.bsp | wc -l)" ]; the
 fi
 
 # shuffle the map on the first startup of the day
-if find dod/cfg/mapcycle.txt -mmin -1380 | grep -q .; then
+if find dod/cfg/mapcycle.txt -mmin 1380 | grep -q .; then
 	echo "Shuffling map cycle file..."
 	shuf dod/cfg/mapcycle.txt > dod/cfg/mapcycle.tmp
 	mv dod/cfg/mapcycle.tmp dod/cfg/mapcycle.txt
