@@ -73,8 +73,8 @@ public Action Timer_CheckPlayers(Handle timer)
 
             if (stuckTime[client] >= g_CvarMaxStuckTime.IntValue) 
             {
-                PrintToServer("[StuckBotKiller] Bot %N has not moved in %d seconds (%.1f, %.1f)", client, stuckTime[client], pos[0], pos[1]);
-		PrintToChatAll("[StuckBotKiller] Bot %N is not moving and will be respawned.", client);
+                PrintToServer("[StuckBotKiller] %N has not moved in %d seconds (%.1f, %.1f)", client, stuckTime[client], pos[0], pos[1]);
+		PrintToChatAll("[StuckBotKiller] %N is not moving and will be respawned.", client);
                 KillClient(client); // work around because ForcePlayerSuicide() did not work
 		stuckTime[client] = 0;
             }
