@@ -73,6 +73,7 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && unzip /tmp/addons/dodsfixchangelevel_win_linux_24022025.zip \
     && cp -v /tmp/addons/dod_teleportdetect.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_stuckbotkiller.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/dod_detonatenades.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/jagdswitcher.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/hlstatsx.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/superlogs-dods.smx addons/sourcemod/plugins/ \
