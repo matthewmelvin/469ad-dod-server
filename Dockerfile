@@ -97,6 +97,8 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && cp -v /tmp/config/startup.sh ../ \
     && chmod 755 ../startup.sh \
     && mkdir maps/graphs \
+    && mkdir -p maps/sound/bandage \
+    && cp -v /tmp/addons/bandage.mp3 maps/sound/bandage/ \
     && ln -s . maps/maps" \
   && rm -rf /tmp/* /var/tmp/*
 
