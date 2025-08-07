@@ -55,7 +55,7 @@ public Action:OnTakeDamage(client, &iAttacker, &iInflictor, &Float:fDamage, &iDa
 	GetDamageTypeString(iDamageType, damageType, sizeof(damageType));
 	
 
-	if (!StrEqual(inflictor, "player"))
+	if (!StrEqual(inflictor, "player") && !StrEqual(inflictor, "rocket_bazooka"))
 	{
     		PrintToServer("[NoBotsFriendlyFire] %N hurt %N indirectly: %s / %s", iAttacker, client, inflictor, damageType);
 		return Plugin_Continue;
