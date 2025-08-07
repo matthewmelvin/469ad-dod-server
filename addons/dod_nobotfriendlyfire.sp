@@ -55,14 +55,14 @@ public Action:OnTakeDamage(client, &iAttacker, &iInflictor, &Float:fDamage, &iDa
 	GetDamageTypeString(iDamageType, damageType, sizeof(damageType));
 	
 
-	if (!StrEqual(inflictor, "player") && !StrEqual(inflictor, "rocket_bazooka"))
+	if (StrEqual(inflictor, "player") || StrEqual(inflictor, "rocket_bazooka") || StrEqual(inflictor, "rocket_pschreck"))
 	{
-    		PrintToServer("[NoBotsFriendlyFire] %N hurt %N indirectly: %s / %s", iAttacker, client, inflictor, damageType);
-		return Plugin_Continue;
+		PrintToServer("[NoBotsFriendlyFire] %N hurting %N blocked: %s / %s", iAttacker, client, inflictor, damageType);
+		return Plugin_Handled;
 	}
 
-	PrintToServer("[NoBotsFriendlyFire] %N hurting %N blocked: %s / %s", iAttacker, client, inflictor, damageType);
-	return Plugin_Handled;
+	PrintToServer("[NoBotsFriendlyFire] %N hurt %N indirectly: %s / %s", iAttacker, client, inflictor, damageType);
+	return Plugin_Continue;
 }
 
 bool IsValidClient(int client)
