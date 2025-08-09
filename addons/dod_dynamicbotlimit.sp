@@ -16,8 +16,6 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-    g_CvarBotLimitMax = CreateConVar("dynamic_bot_limit_max", "20", "Seconds a bot must be stuck before being killed", FCVAR_NONE);
-    g_CvarBotLimitDelay = CreateConVar("dynamic_bot_limit_delay", "5", "Minimum movement required reset the stuck timer", FCVAR_NONE);
     HookEvent("dod_round_start", Event_RoundStart);
     PrintToServer("[DynamicBotLimit] teamplay_round_start event hooked, plugin ready.");
 }
