@@ -80,7 +80,7 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && cp -v /tmp/addons/hlstatsx.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/superlogs-dods.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_nobotsinendgame.smx addons/sourcemod/plugins/ \
-    && cp -v /tmp/addons/dodsbalancer.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/dod_newteambalancer.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_pistols.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_fireworks.smx addons/sourcemod/plugins/ \
