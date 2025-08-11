@@ -1,5 +1,5 @@
 /**
-* DoD:S DetoNades by Root (Modernized by ChatGPT)
+* DoD:S DetoNades by Root
 *
 * Description:
 *   Detonates a grenade when it collides with a player.
@@ -41,7 +41,7 @@ char g_LiveGrenades[GRENADE_COUNT][] = {
 // ====[ PLUGIN INFO ]========================================================
 public Plugin myinfo = {
     name        = PLUGIN_NAME,
-    author      = "Root (modernized by ChatGPT)",
+    author      = "Root"
     description = "Detonates a grenade when it collides with a player",
     version     = PLUGIN_VERSION,
     url         = "http://dodsplugins.com/"
