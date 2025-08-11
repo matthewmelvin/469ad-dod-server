@@ -3,7 +3,7 @@
 
 public Plugin:myinfo = 
 {
-	name = "No Bot Friendly Fire",
+	name = "Bot Friendly Fire",
 	author = "Mloe",
 	description = "Stop bots from hurting their team mates",
 	version = "0.1",
@@ -12,13 +12,13 @@ public Plugin:myinfo =
 
 public void OnPluginStart()
 {
-    PrintToServer("[NoBotsFriendlyFire] hooking OnTakeDamage on clients...");
+	PrintToServer("[BotFriendlyFire] hooking OnTakeDamage on clients...");
 }
 
 public OnClientPutInServer(client)
 {
 	if (!IsFakeClient(client)) {
-    		PrintToServer("[NoBotsFriendlyFire] hooking OnTakeDamage on %N", client);
+		PrintToServer("[BotFriendlyFire] hooking OnTakeDamage on %N", client);
 		SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 	}
 }
@@ -26,7 +26,7 @@ public OnClientPutInServer(client)
 public OnClientDisconnect(client)
 {
 	if (!IsFakeClient(client)) {
-    		PrintToServer("[NoBotsFriendlyFire] unhooking OnTakeDamage on %N", client);
+		PrintToServer("[BotFriendlyFire] unhooking OnTakeDamage on %N", client);
 		SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 	}
 }
@@ -57,11 +57,11 @@ public Action:OnTakeDamage(client, &iAttacker, &iInflictor, &Float:fDamage, &iDa
 
 	if (StrEqual(inflictor, "player") || StrEqual(inflictor, "rocket_bazooka") || StrEqual(inflictor, "rocket_pschreck"))
 	{
-		PrintToServer("[NoBotsFriendlyFire] %N hurting %N blocked: %s / %s", iAttacker, client, inflictor, damageType);
+		PrintToServer("[BotFriendlyFire] %N hurting %N blocked: %s / %s", iAttacker, client, inflictor, damageType);
 		return Plugin_Handled;
 	}
 
-	PrintToServer("[NoBotsFriendlyFire] %N hurt %N indirectly: %s / %s", iAttacker, client, inflictor, damageType);
+	PrintToServer("[BotFriendlyFire] %N hurt %N indirectly: %s / %s", iAttacker, client, inflictor, damageType);
 	return Plugin_Continue;
 }
 
@@ -94,7 +94,7 @@ void GetDamageTypeString(int iDamageType, char[] buffer, int maxlen)
 	if (iDamageType & DMG_ENERGYBEAM)		Format(buffer, maxlen, "%sENERGYBEAM ", buffer);
 	if (iDamageType & DMG_PREVENT_PHYSICS_FORCE)	Format(buffer, maxlen, "%sPREVENT_PHYSICS_FORCE ", buffer);
 	if (iDamageType & DMG_NEVERGIB)			Format(buffer, maxlen, "%sNEVERGIB ", buffer);
-	if (iDamageType & DMG_ALWAYSGIB)     		Format(buffer, maxlen, "%sALWAYSGIB ", buffer);
+	if (iDamageType & DMG_ALWAYSGIB)		Format(buffer, maxlen, "%sALWAYSGIB ", buffer);
 	if (iDamageType & DMG_DROWN)			Format(buffer, maxlen, "%sDROWN ", buffer);
 	if (iDamageType & DMG_PARALYZE)			Format(buffer, maxlen, "%sPARALYZE ", buffer);
 	if (iDamageType & DMG_NERVEGAS)			Format(buffer, maxlen, "%sNERVEGAS ", buffer);
@@ -114,5 +114,5 @@ void GetDamageTypeString(int iDamageType, char[] buffer, int maxlen)
 	if (StrEqual(buffer, ""))
 	{
 		Format(buffer, maxlen, "UNKNOWN");
-    	}
+	}
 }
