@@ -71,16 +71,15 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && mv addons/sourcemod/plugins/disabled/clientprefs.smx addons/sourcemod/plugins/ \
     && unzip /tmp/addons/delayhibernate.zip \
     && unzip /tmp/addons/dodsfixchangelevel_win_linux_24022025.zip \
-    && cp -v /tmp/addons/dod_nobotfriendlyfire.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/dod_botfriendlyfire.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_dynamicbotlimit.smx addons/sourcemod/plugins/ \
+    && cp -v /tmp/addons/dod_newteambalancer.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_teleportdetect.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_stuckbotkiller.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_detonatenades.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/jagdswitcher.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/hlstatsx.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/superlogs-dods.smx addons/sourcemod/plugins/ \
-    && cp -v /tmp/addons/dod_nobotsinendgame.smx addons/sourcemod/plugins/ \
-    && cp -v /tmp/addons/dod_newteambalancer.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_medic.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/sm_dod_pistols.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_fireworks.smx addons/sourcemod/plugins/ \
