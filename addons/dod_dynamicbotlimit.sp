@@ -95,8 +95,8 @@ public Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 		SetNewBaxBots(1);
 	}
 
-	// disconnected from spectator
-	if ((newTeam == 0) && (oldTeam == 1)) {
+	// disconnected from spectator/unassigned
+	if ((newTeam == 0) && (oldTeam < 2)) {
 		if (GetConVarBool(g_CvarDynBotDebug))
 			PrintToServer("[DynamicBotLimit] %N disconnected: - decrease the bot count", client);
 		SetNewBaxBots(-1);
