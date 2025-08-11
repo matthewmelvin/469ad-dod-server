@@ -11,26 +11,44 @@ public Plugin:myinfo =
 };
 
 new Handle:cvarEnabled = INVALID_HANDLE;
-new Handle:maxteamdiff = INVALID_HANDLE;
 new Handle:dbugEnabled = INVALID_HANDLE;
 new Handle:adminImmune = INVALID_HANDLE;
+new Handle:maxTeamDiff = INVALID_HANDLE;
+
+new bool:g_IsRoundStarted = false;
 
 public OnPluginStart()
 {
 	cvarEnabled = CreateConVar("new_team_balancer_enable", "1", "Enables the DOD:S Balancer plugin");
 	dbugEnabled = CreateConVar("new_team_balancer_debug", "0", "Enable debug logging for DOD:S Balancer");
 	adminImmune = CreateConVar("new_team_balancer_admins", "0", "Enable DOD:S Balance admin immunity");
-	maxteamdiff = CreateConVar("new_team_balancer_maxteamdiff", "1", "Max team player difference 1-5");
+	maxTeamDiff = CreateConVar("new_team_balancer_maxdiff", "1", "Max imbalance for DOD:S Balancer to ignore");
 
 	HookEvent("player_death", EventPlayerDeath);
 	HookEvent("player_team", EventPlayerTeam);
-	PrintToServer("[NewTeamBalancer] player_death and player_team events hooked, plugin ready.");
+	HookEvent("dod_round_start", EventRoundStart);
+	PrintToServer("[NewTeamBalancer] multiple events hooked, plugin ready.");
+}
+
+public OnMapStart()
+{
+	g_IsRoundStarted = false;
+	// PrintToServer("[NewTeamBalancer] new map started — join balancing enabled.");
+}
+
+public EventRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	g_IsRoundStarted = true;
+	// PrintToServer("[NewTeamBalancer] round has started — join balancing disabled.");
 }
 
 public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (!GetConVarBool(cvarEnabled))
 		return;
+
+	// if (g_IsRoundStarted)
+	//	return;
 
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client <= 0 || !IsClientInGame(client))
@@ -39,8 +57,12 @@ public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 	new newTeam = GetEventInt(event, "team");
 	new oldTeam = GetEventInt(event, "oldteam");
 
-	if ((newTeam < 2) || (oldTeam >= 2))
+	// only balance if joining from unassigned
+	if ((newTeam < 2) || (oldTeam != 0))
 		return;
+
+	if (GetConVarBool(dbugEnabled))
+		PrintToServer("[NewTeamBalancer] %N joined: - checking balance.", client, newTeam, oldTeam);
 
 	CheckAndBalance(client);
 }
@@ -53,6 +75,9 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 	new victimClient = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (victimClient <= 0 || !IsClientInGame(victimClient))
 		return;
+
+	if (GetConVarBool(dbugEnabled))
+		PrintToServer("[NewTeamBalancer] %N died: - checking balance.", victimClient);
 
 	CheckAndBalance(victimClient);
 }
@@ -83,11 +108,14 @@ public CheckAndBalance(client)
 			team2++;
 	}
 
-	new maxDiff = GetConVarInt(maxteamdiff);
-	if (maxDiff < 1 || maxDiff > 5)
-	{
-		SetConVarInt(maxteamdiff, 1);
+	new maxDiff = GetConVarInt(maxTeamDiff);
+	if (maxDiff < 1) {
+		SetConVarInt(maxTeamDiff, 1);
 		maxDiff = 1;
+	}
+	if (maxDiff > 5) {
+		SetConVarInt(maxTeamDiff, 5);
+		maxDiff = 5;
 	}
 	new curDiff = team1 - team2;
 	new team = GetClientTeam(client);
