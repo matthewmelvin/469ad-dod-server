@@ -8,12 +8,13 @@ public Plugin myinfo =
 {
 	name = "Dynamic Bot Limit",
 	author = "Mloe",
-	description = "Dynamicly adjust the number of bot during play",
+	description = "Dynamicly adjust the number of bots",
 	version = "0.1",
 	url = ""
 };
 
 new bool:g_IsRoundStarted = false;
+new bool:g_IsHibernating = false;
 new g_RealMaxBots = 0;
 
 
@@ -24,6 +25,7 @@ public void OnPluginStart()
 	HookEvent("dod_round_start", Event_RoundStart);
 	HookEvent("dod_game_over", Event_GameOver);
         HookEvent("player_team", Event_PlayerTeam);
+        HookEvent("player_disconnect", Event_Disconnect);
 	PrintToServer("[DynamicBotLimit] multiple events hooked, plugin ready.");
 }
 
@@ -52,13 +54,52 @@ public void Event_GameOver(Event event, const char[] name, bool dontBroadcast)
 }
 
 public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast) {
-	if (g_IsRoundStarted)
+	if (g_IsHibernating || g_IsRoundStarted)
 		return;
 
 	g_IsRoundStarted = true;
 	
 	PrintToServer("[DynamicBotLimit] game started - setting new max: %d", g_RealMaxBots);
-	SetNewBaxBots(0);
+	SetNewMaxBots(0);
+}
+
+public void Event_Disconnect(Event event, const char[] name, bool dontBroadcast)
+{
+        new client = GetClientOfUserId(GetEventInt(event, "userid"));
+
+	if (!IsFakeClient(client) || g_IsHibernating)
+		return;
+
+	char reason[256];
+	event.GetString("reason", reason, sizeof(reason));
+
+	if (GetConVarBool(g_CvarDynBotDebug))
+		PrintToServer("[DynamicBotLimit] %N disconnected - %s", client, reason);
+
+	if (StrContains(reason, "server is hibernating", true) != -1) {
+		g_IsHibernating = true;
+		PrintToServer("[DynamicBotLimit] hibernating - bots disabled to allow sleep.");
+		ServerCommand("rcbotd config max_bots 0");
+	}
+}
+
+public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
+{
+	if (!g_IsHibernating) {
+		return true;
+	}
+
+	if (IsFakeClient(client)) {
+		PrintToServer("[DynamicBotLimit] hibernating - blocking bot from joining.");
+		KickClient(client, "Bots blocked during hibernation");
+		ServerCommand("rcbotd config max_bots 0");
+		return false;
+	}
+
+	g_IsHibernating = false;
+	PrintToServer("[DynamicBotLimit] server resuming - resetting bot limit.");
+	SetNewMaxBots(0);
+	return true;	
 }
 
 public void OnClientPutInServer(int client)
@@ -68,7 +109,7 @@ public void OnClientPutInServer(int client)
 
 	if (GetConVarBool(g_CvarDynBotDebug))
 		PrintToServer("[DynamicBotLimit] %N connected - increase the bot count", client);
-	SetNewBaxBots(1);
+	SetNewMaxBots(1);
 }
 
 public Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
@@ -84,7 +125,7 @@ public Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 	if ((newTeam >= 2) && (oldTeam < 2)) {
 		if (GetConVarBool(g_CvarDynBotDebug))
 			PrintToServer("[DynamicBotLimit] %N joined play: - decrease the bot count", client);
-		SetNewBaxBots(-1);
+		SetNewMaxBots(-1);
 		return;
 	}
 
@@ -92,14 +133,14 @@ public Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 	if ((newTeam == 1) && (oldTeam >= 2)) {
 		if (GetConVarBool(g_CvarDynBotDebug))
 			PrintToServer("[DynamicBotLimit] %N spectating: - increase the bot count", client);
-		SetNewBaxBots(1);
+		SetNewMaxBots(1);
 	}
 
 	// disconnected from spectator/unassigned
 	if ((newTeam == 0) && (oldTeam < 2)) {
 		if (GetConVarBool(g_CvarDynBotDebug))
 			PrintToServer("[DynamicBotLimit] %N disconnected: - decrease the bot count", client);
-		SetNewBaxBots(-1);
+		SetNewMaxBots(-1);
 	}
 }
 
@@ -113,7 +154,7 @@ int CountSpawns(const char[] classname)
 	return count;
 }
 
-void SetNewBaxBots(int change)
+void SetNewMaxBots(int change)
 {
 
 	g_RealMaxBots = g_RealMaxBots + change;
