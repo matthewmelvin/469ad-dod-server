@@ -115,31 +115,31 @@ grep -H . dod/cfg/startup.txt
 # so the mapcycle isn't constantly being sent back to the beginning.
 : > dod/console.log
 (tail -f dod/console.log | while read -r line; do
-	if [ "$used" != "1" ] && echo "$line" | grep -q "^Client.*connected"; then
-		echo "The first client has connected..."
-		used=1
-		continue
-        fi
+#nokill#	if [ "$used" != "1" ] && echo "$line" | grep -q "^Client.*connected"; then
+#nokill#		echo "The first client has connected..."
+#nokill#		used=1
+#nokill#		continue
+#nokill#        fi
 	last=$(echo "$line" | grep 'Mapchange' | rev | awk '{print $2}' | rev)
 	if [ -n "$last" ]; then
 		echo "Saving last seen map to file: \"$last"\"
 		echo "$last" > dod/cfg/lastmap.txt
 		continue
 	fi
-	if echo "$line" | grep -q "Server is hibernating"; then
-		if [ "$used" != "1" ]; then
-			echo "Server not used, letting hibernate..."
-			continue
-		fi
-		echo "Removing last map tracking file..."
-		rm -v dod/cfg/lastmap.txt
-		echo "Shutting down container via kill..."
-		ps auxwww | awk '/[s]rcds_/{print $2}' | xargs -r kill
-		while true; do
-			echo "Waiting to die..."
-			sleep 1;
-		done
-	fi
+#nokill#	if echo "$line" | grep -q "Server is hibernating"; then
+#nokill#		if [ "$used" != "1" ]; then
+#nokill#			echo "Server not used, letting hibernate..."
+#nokill#			continue
+#nokill#		fi
+#nokill#		echo "Removing last map tracking file..."
+#nokill#		rm -v dod/cfg/lastmap.txt
+#nokill#		echo "Shutting down container via kill..."
+#nokill#		ps auxwww | awk '/[s]rcds_/{print $2}' | xargs -r kill
+#nokill#		while true; do
+#nokill#			echo "Waiting to die..."
+#nokill#			sleep 1;
+#nokill#		done
+#nokill#	fi
 done) &
 
 ./srcds_run -condebug -norestart -game dod \
