@@ -74,7 +74,6 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && cp -v /tmp/addons/dod_botfriendlyfire.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_dynamicbotlimit.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_newteambalancer.smx addons/sourcemod/plugins/ \
-    && cp -v /tmp/addons/dod_teleportdetect.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_stuckbotkiller.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_detonatenades.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/jagdswitcher.smx addons/sourcemod/plugins/ \
