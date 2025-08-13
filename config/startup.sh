@@ -50,14 +50,14 @@ else
 fi
 
 # make sure any custom maps are linked
-find dod/custom -name '*.bsp' | cut -f2- -d/  | while read map; do
-	(cd dod/maps && [ ! -e "$(basename $map)" ] && ln -sv "../$map" .)
+find dod/custom -name '*.bsp' | cut -f2- -d/  | while read -r map; do
+	(cd dod/maps && [ ! -e "$(basename "$map")" ] && ln -sv "../$map" .)
 done
 
 # make sure all the maps are in the mapcycle
-if [ "$(wc -l < dod/cfg/mapcycle.txt)" -ne "$(ls dod/maps/*.bsp | wc -l)" ]; then
+if [ "$(wc -l < dod/cfg/mapcycle.txt)" -ne "$(find dod/maps -name '*.bsp' | wc -l)" ]; then
 	echo "Updating map cycle file..."
-	(cd dod/maps && ls *.bsp) | sed 's/.bsp$//' | shuf > dod/cfg/mapcycle.txt
+	find dod/maps -name '*.bsp' | sed 's/.bsp$//' | shuf > dod/cfg/mapcycle.txt
 fi
 
 # shuffle the map on the first startup of the day
@@ -120,7 +120,7 @@ grep -H . dod/cfg/startup.txt
 #nokill#		used=1
 #nokill#		continue
 #nokill#        fi
-	last=$(echo "$line" | grep 'Mapchange' | rev | awk '{print $2}' | rev)
+	last=$(echo "$line" | awk '/^CHANGE LEVEL/{print $NF}')
 	if [ -n "$last" ]; then
 		echo "Saving last seen map to file: \"$last"\"
 		echo "$last" > dod/cfg/lastmap.txt
