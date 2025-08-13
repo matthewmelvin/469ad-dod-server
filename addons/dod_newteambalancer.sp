@@ -15,8 +15,6 @@ new Handle:dbugEnabled = INVALID_HANDLE;
 new Handle:adminImmune = INVALID_HANDLE;
 new Handle:maxTeamDiff = INVALID_HANDLE;
 
-new bool:g_IsRoundStarted = false;
-
 public OnPluginStart()
 {
 	cvarEnabled = CreateConVar("new_team_balancer_enable", "1", "Enables the DOD:S Balancer plugin");
@@ -26,29 +24,13 @@ public OnPluginStart()
 
 	HookEvent("player_death", EventPlayerDeath);
 	HookEvent("player_team", EventPlayerTeam);
-	HookEvent("dod_round_start", EventRoundStart);
 	PrintToServer("[NewTeamBalancer] multiple events hooked, plugin ready.");
-}
-
-public OnMapStart()
-{
-	g_IsRoundStarted = false;
-	// PrintToServer("[NewTeamBalancer] new map started — join balancing enabled.");
-}
-
-public EventRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
-{
-	g_IsRoundStarted = true;
-	// PrintToServer("[NewTeamBalancer] round has started — join balancing disabled.");
 }
 
 public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (!GetConVarBool(cvarEnabled))
 		return;
-
-	// if (g_IsRoundStarted)
-	//	return;
 
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client <= 0 || !IsClientInGame(client))
@@ -57,8 +39,8 @@ public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 	new newTeam = GetEventInt(event, "team");
 	new oldTeam = GetEventInt(event, "oldteam");
 
-	// only balance if joining from unassigned
-	if ((newTeam < 2) || (oldTeam != 0))
+	// only balance if newly joining play
+	if ((newTeam < 2) || (oldTeam >= 2))
 		return;
 
 	if (GetConVarBool(dbugEnabled))
