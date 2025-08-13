@@ -120,7 +120,7 @@ grep -H . dod/cfg/startup.txt
 #nokill#		used=1
 #nokill#		continue
 #nokill#        fi
-	last=$(echo "$line" | awk '/^CHANGE LEVEL/{print $NF}')
+	last=$(echo "$line" | awk -F '[()]' '/Hook_LevelInit/{print $2}')
 	if [ -n "$last" ]; then
 		echo "Saving last seen map to file: \"$last"\"
 		echo "$last" > dod/cfg/lastmap.txt
