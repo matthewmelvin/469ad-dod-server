@@ -46,7 +46,7 @@ public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 	if (GetConVarBool(dbugEnabled))
 		PrintToServer("[NewTeamBalancer] %N joined: - checking balance.", client, newTeam, oldTeam);
 
-	CheckAndBalance(client);
+	CheckAndBalance(client, newTeam);
 }
 
 public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
@@ -61,32 +61,40 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 	if (GetConVarBool(dbugEnabled))
 		PrintToServer("[NewTeamBalancer] %N died: - checking balance.", victimClient);
 
-	CheckAndBalance(victimClient);
+	new team = GetClientTeam(victimClient);
+
+	CheckAndBalance(victimClient, team);
 }
 
-public CheckAndBalance(client)
+public CheckAndBalance(client, int team)
 {
-	decl String:clientName[64];
-	GetClientName(client, clientName, sizeof(clientName));
 	new isBot = IsFakeClient(client);
 
 	if (GetConVarBool(dbugEnabled)) {
 		if (!isBot)
-			PrintToServer("[NewTeamBalancer] %s is a human. Ignoring bots in the team count.", clientName);
+			PrintToServer("[NewTeamBalancer] %N is a human. Ignoring bots in the team count.", client);
 		else
-			PrintToServer("[NewTeamBalancer] %s is a bot. Including all in the team count.", clientName);
+			PrintToServer("[NewTeamBalancer] %N is a bot. Including all in the team count.", client);
 	}
 
 	new team1 = 0;
 	new team2 = 0;
-	for (new i = 1; i <= MaxClients; i++) {
-		if (!IsClientInGame(i)) continue;
 
-		if (!isBot && IsFakeClient(i)) continue;
+	new t; for (new i = 1; i <= MaxClients; i++) {
+		if (!IsClientInGame(i))
+			continue;
 
-		if (GetClientTeam(i) == 2)
+		if (!isBot && IsFakeClient(i))
+			continue;
+
+		if (i == client)
+			t = team;
+		else
+			t = GetClientTeam(i);
+
+		if (t == 2)
 			team1++;
-		else if (GetClientTeam(i) == 3)
+		else if (t == 3)
 			team2++;
 	}
 
@@ -100,47 +108,46 @@ public CheckAndBalance(client)
 		maxDiff = 5;
 	}
 	new curDiff = team1 - team2;
-	new team = GetClientTeam(client);
 
 	if (GetConVarBool(dbugEnabled))
-		PrintToServer("[NewTeamBalancer] (%s) team: %d, counts: %d vs %d, diff: %d, max: %d",
-			clientName, (team-1), team1, team2, curDiff, maxDiff);
+		PrintToServer("[NewTeamBalancer] %N - team: %d, counts: %d vs %d, diff: %d, max: %d",
+			client, (team-1), team1, team2, curDiff, maxDiff);
 
 	if (curDiff > maxDiff || -curDiff > maxDiff)
 	{
 		if ((team == 2 && curDiff > maxDiff) || (team == 3 && -curDiff > maxDiff))
 		{
 			if (GetConVarBool(adminImmune) && GetUserAdmin(client) != INVALID_ADMIN_ID) {
-				PrintToServer("[NewTeamBalancer] teams are out of balance, but %s is an admin.", clientName);
+				PrintToServer("[NewTeamBalancer] teams are out of balance, but %N is an admin.", client);
 			} else {
 				if (GetConVarBool(dbugEnabled))
-					PrintToServer("[NewTeamBalancer] teams are out of balance, %s will be swapped", clientName);
-				CreateTimer(0.2, TimerSwitchTeam, client);
+					PrintToServer("[NewTeamBalancer] teams are out of balance, %N will be swapped", client);
+				CreateTimer(0.3, TimerSwitchTeam, client);
 			}
 		} else {
 			if (GetConVarBool(dbugEnabled))
-				PrintToServer("[NewTeamBalancer] teams are out of balance, but %s already there.", clientName);
+				PrintToServer("[NewTeamBalancer] teams are out of balance, but %N already there.", client);
 		}
 	} else {
 		if (GetConVarBool(dbugEnabled))
-			PrintToServer("[NewTeamBalancer] teams are in balance, leaving %s alone.", clientName);
+			PrintToServer("[NewTeamBalancer] teams are in balance, leaving %N alone.", client);
 	}
 }
 
 public GetOtherTeam(team)
 {
-	if (team == 3)
+	if (team == 2)
+		return 3;
+	else if (team == 3)
 		return 2;
 	else
-		return 3;
+		return team;
 }
 
 public Action:TimerSwitchTeam(Handle:timer, any:client)
 {
-	decl String:clientName[64];
 	ChangeClientTeam(client, GetOtherTeam(GetClientTeam(client)));
-	GetClientName(client, clientName, sizeof(clientName));
-	PrintToServer("[NewTeamBalancer] %s has been switched to balance the teams.", clientName);
-	PrintToChatAll("\x04[NewBal]\x01 %s has been switched to balance the teams.", clientName);		
+	PrintToServer("[NewTeamBalancer] %N has been switched to balance the teams.", client);
+	PrintToChatAll("\x04[NewBal]\x01 %N has been switched to balance the teams.", client);
 	return Plugin_Handled;
 }
