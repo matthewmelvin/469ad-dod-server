@@ -57,7 +57,7 @@ done
 # make sure all the maps are in the mapcycle
 if [ "$(wc -l < dod/cfg/mapcycle.txt)" -ne "$(find dod/maps -name '*.bsp' | wc -l)" ]; then
 	echo "Updating map cycle file..."
-	find dod/maps -name '*.bsp' | sed 's/.bsp$//' | shuf > dod/cfg/mapcycle.txt
+	find dod/maps -name '*.bsp' -printf "%f\n" | sed 's/.bsp$//' | shuf > dod/cfg/mapcycle.txt
 fi
 
 # shuffle the map on the first startup of the day
@@ -93,7 +93,7 @@ if [ -z "$map" ] || [ ! -f "dod/maps/${map}.bsp" ]; then
 fi
 
 if [ -z "$map" ] || [ ! -f "dod/maps/${map}.bsp" ]; then
-	map=$(find dod/maps/ -name '*.bsp' | shuf -n 1 | sed 's#^.*/##; s/.bsp$//')
+	map=$(find dod/maps/ -name '*.bsp' -printf "%f\n" | shuf -n 1 | sed 's/.bsp$//')
 	echo "Using map from maps directory: \"$map\""
 fi
 
