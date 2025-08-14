@@ -213,6 +213,7 @@ public SwitchTeam(client, int newTeam)
 
 	if (oldTeam == newTeam) {
 		PrintToServer("[NewTeamBalancer] switch of %N aborted - already switched", client);
+		return;
 	}
 
 	ChangeClientTeam(client, newTeam);
