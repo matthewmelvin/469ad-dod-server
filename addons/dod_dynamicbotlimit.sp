@@ -19,9 +19,7 @@ public Plugin myinfo =
 
 new bool:g_IsRoundStarted = false;
 new bool:g_IsHibernating = true;
-new bool:g_BotsConnected = false;
 new g_RealMaxBots = 0;
-
 
 public void OnPluginStart()
 {
@@ -44,7 +42,6 @@ public void OnPluginStart()
 public OnMapStart()
 {
 	g_IsRoundStarted = false;
-	g_BotsConnected = false;
 
 	int alliesSpawns = CountSpawns("info_player_allies");
 	int axisSpawns   = CountSpawns("info_player_axis");
@@ -113,14 +110,9 @@ public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
 			ServerCommand("rcbotd config max_bots 0");
 			return false;
 		}
-		if (!g_BotsConnected) {
-			// the module may have reset limit to default when initilising
-			g_BotsConnected = true;	
-			PrintToServer("[DynamicBotLimit] first bot connected - reset bot limit");
-			SetNewMaxBots(0);
-		}
 		if (GetConVarBool(g_CvarDynBotDebug))
 			PrintToServer("[DynamicBotLimit] %N connected - Added to server", client);
+		SetNewMaxBots(0);
 	} else {
 		if (g_IsHibernating) {
 			g_IsHibernating = false;
@@ -128,7 +120,6 @@ public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
 			SetNewMaxBots(0);
 		}
 	}
-
 	return true;	
 }
 
