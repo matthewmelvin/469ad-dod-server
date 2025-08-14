@@ -19,6 +19,7 @@ public Plugin myinfo =
 
 new bool:g_IsRoundStarted = false;
 new bool:g_IsHibernating = true;
+new bool:g_BotsConnected = false;
 new g_RealMaxBots = 0;
 
 
@@ -43,6 +44,7 @@ public void OnPluginStart()
 public OnMapStart()
 {
 	g_IsRoundStarted = false;
+	g_BotsConnected = false;
 
 	int alliesSpawns = CountSpawns("info_player_allies");
 	int axisSpawns   = CountSpawns("info_player_axis");
@@ -60,7 +62,7 @@ public OnMapStart()
 
 public void Event_GameOver(Event event, const char[] name, bool dontBroadcast)
 {
-	PrintToServer("[DynamicBotLimit] game over - bots disabled until next level.");
+	PrintToServer("[DynamicBotLimit] game over - bots disabled until next level");
 	ServerCommand("rcbotd config max_bots 0");
 }
 
@@ -90,7 +92,7 @@ public void Event_Disconnect(Event event, const char[] name, bool dontBroadcast)
 
 		if (StrContains(reason, "server is hibernating", true) != -1) {
 			g_IsHibernating = true;
-			PrintToServer("[DynamicBotLimit] hibernating - bots disabled to allow sleep.");
+			PrintToServer("[DynamicBotLimit] hibernating - blocking bots from joining");
 			ServerCommand("rcbotd config max_bots 0");
 		}
 	} else {
@@ -106,17 +108,23 @@ public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
 {
 	if (IsFakeClient(client)) {
 		if (g_IsHibernating) {
-			PrintToServer("[DynamicBotLimit] hibernating - blocking bot from joining.");
+			PrintToServer("[DynamicBotLimit] hibernating - blocking bot from joining");
 			KickClient(client, "Blocking bot, server is hibernating");
 			ServerCommand("rcbotd config max_bots 0");
 			return false;
+		}
+		if (!g_BotsConnected) {
+			// the module may have reset limit to default when initilising
+			g_BotsConnected = true;	
+			PrintToServer("[DynamicBotLimit] first bot connected - reset bot limit");
+			SetNewMaxBots(0);
 		}
 		if (GetConVarBool(g_CvarDynBotDebug))
 			PrintToServer("[DynamicBotLimit] %N connected - Added to server", client);
 	} else {
 		if (g_IsHibernating) {
 			g_IsHibernating = false;
-			PrintToServer("[DynamicBotLimit] server resuming - resetting bot limit.");
+			PrintToServer("[DynamicBotLimit] server resuming - stop unblocking bots");
 			SetNewMaxBots(0);
 		}
 	}
