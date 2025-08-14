@@ -10,10 +10,17 @@ public Plugin:myinfo =
 	url = ""
 };
 
+#define MAX_PLAYERS 64
+
 new Handle:cvarEnabled = INVALID_HANDLE;
 new Handle:dbugEnabled = INVALID_HANDLE;
 new Handle:adminImmune = INVALID_HANDLE;
 new Handle:maxTeamDiff = INVALID_HANDLE;
+
+new Handle:g_SwitchTimers[MAXPLAYERS + 1];
+
+new bool:g_IsMapStart = false;
+new bool:g_IsNewRound = false;
 
 public OnPluginStart()
 {
@@ -24,7 +31,27 @@ public OnPluginStart()
 
 	HookEvent("player_death", EventPlayerDeath);
 	HookEvent("player_team", EventPlayerTeam);
+	HookEvent("dod_round_start", EventRoundStart);
 	PrintToServer("[NewTeamBalancer] multiple events hooked, plugin ready.");
+
+	for (int client = 1; client <= MaxClients; client++) {
+		g_SwitchTimers[client] = INVALID_HANDLE;
+	}
+}
+
+public OnMapStart()
+{
+	g_IsMapStart = true;
+}
+
+public void EventRoundStart(Event event, const char[] name, bool dontBroadcast) {
+	// dont block join-team balancing for the first round
+	if (!g_IsMapStart) {
+	        g_IsNewRound = true;
+		if (GetConVarBool(dbugEnabled))
+			PrintToServer("[NewTeamBalancer] new round - disabling team-join balancing");
+	}
+	g_IsMapStart = false;
 }
 
 public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
@@ -32,8 +59,13 @@ public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 	if (!GetConVarBool(cvarEnabled))
 		return;
 
+	// team-join balancing disabled until the first death
+	// stop from interfering with plugins like jagdswitcher
+	if (g_IsNewRound)
+		return;
+
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (client <= 0 || !IsClientInGame(client))
+	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
 		return;
 
 	new newTeam = GetEventInt(event, "team");
@@ -44,9 +76,9 @@ public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 		return;
 
 	if (GetConVarBool(dbugEnabled))
-		PrintToServer("[NewTeamBalancer] %N joined: - checking balance.", client, newTeam, oldTeam);
+		PrintToServer("[NewTeamBalancer] %N joined - checking balance.", client, newTeam, oldTeam);
 
-	CheckAndBalance(client, newTeam);
+	CheckAndBalance(client, newTeam, 0.0);
 }
 
 public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
@@ -54,20 +86,41 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 	if (!GetConVarBool(cvarEnabled))
 		return;
 
-	new victimClient = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (victimClient <= 0 || !IsClientInGame(victimClient))
+	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	if (g_IsNewRound && (attacker > 0)) {
+		if (GetConVarBool(dbugEnabled))
+			PrintToServer("[NewTeamBalancer] first kill - re-enabling team-join balancing");
+		g_IsNewRound = false;
+	}
+
+	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (victim <= 0 || !IsClientInGame(victim))
 		return;
 
 	if (GetConVarBool(dbugEnabled))
-		PrintToServer("[NewTeamBalancer] %N died: - checking balance.", victimClient);
+		if (attacker > 0)
+			PrintToServer("[NewTeamBalancer] %N was killed - checking balance.", victim);
+		else
+			PrintToServer("[NewTeamBalancer] %N has died - checking balance.", victim);
 
-	new team = GetClientTeam(victimClient);
+	new team = GetClientTeam(victim);
 
-	CheckAndBalance(victimClient, team);
+	if (attacker > 0) {
+		// delay the move so it doesnt look like a team kill
+		CheckAndBalance(victim, team, 6.2);
+	} else {
+		CheckAndBalance(victim, team, 0.0);
+	}
 }
 
-public CheckAndBalance(client, int team)
+public CheckAndBalance(client, int team, float delay)
 {
+	if (g_SwitchTimers[client] != INVALID_HANDLE) {
+		if (GetConVarBool(dbugEnabled))
+			PrintToServer("[NewTeamBalancer] %N is already pending a switch. Ignoring event.", client);
+		return;
+	}
+
 	new isBot = IsFakeClient(client);
 
 	if (GetConVarBool(dbugEnabled)) {
@@ -120,9 +173,19 @@ public CheckAndBalance(client, int team)
 			if (GetConVarBool(adminImmune) && GetUserAdmin(client) != INVALID_ADMIN_ID) {
 				PrintToServer("[NewTeamBalancer] teams are out of balance, but %N is an admin.", client);
 			} else {
-				if (GetConVarBool(dbugEnabled))
-					PrintToServer("[NewTeamBalancer] teams are out of balance, %N will be swapped", client);
-				CreateTimer(0.3, TimerSwitchTeam, client);
+				int newTeam = (team == 2) ? 3 : 2;
+				if (delay > 0) {
+					if (GetConVarBool(dbugEnabled))
+						PrintToServer("[NewTeamBalancer] teams are out of balance, %N will be swapped", client);
+					Handle swapData = CreateDataPack();
+					WritePackCell(swapData, client);
+					WritePackCell(swapData, newTeam);
+					g_SwitchTimers[client] = CreateTimer(delay, TimerSwitchTeam, swapData);
+				} else {
+					if (GetConVarBool(dbugEnabled))
+						PrintToServer("[NewTeamBalancer] teams are out of balance, swapping %N now", client);
+					SwitchTeam(client, newTeam);
+				}
 			}
 		} else {
 			if (GetConVarBool(dbugEnabled))
@@ -134,20 +197,32 @@ public CheckAndBalance(client, int team)
 	}
 }
 
-public GetOtherTeam(team)
+public SwitchTeam(client, int newTeam)
 {
-	if (team == 2)
-		return 3;
-	else if (team == 3)
-		return 2;
-	else
-		return team;
+	int oldTeam = GetClientTeam(client);
+
+	if ((oldTeam < 2) || !IsClientInGame(client)) {
+		PrintToServer("[NewTeamBalancer] switch of %N aborted - left play", client);
+		return;
+	}
+
+	if (oldTeam == newTeam) {
+		PrintToServer("[NewTeamBalancer] switch of %N aborted - already switched", client);
+	}
+
+	ChangeClientTeam(client, newTeam);
+	PrintToServer("[NewTeamBalancer] %N has been switched teams: from %d to %d", client, (oldTeam-1), (newTeam-1));
+	PrintToChatAll("\x04[NewBal]\x01 %N has been switched to balance the teams.", client);
 }
 
-public Action:TimerSwitchTeam(Handle:timer, any:client)
+public Action:TimerSwitchTeam(Handle:timer, any:swapData)
 {
-	ChangeClientTeam(client, GetOtherTeam(GetClientTeam(client)));
-	PrintToServer("[NewTeamBalancer] %N has been switched to balance the teams.", client);
-	PrintToChatAll("\x04[NewBal]\x01 %N has been switched to balance the teams.", client);
+	ResetPack(swapData);
+	int client = ReadPackCell(swapData);
+	int newTeam = ReadPackCell(swapData);
+	CloseHandle(swapData);
+
+	SwitchTeam(client, newTeam);
+	g_SwitchTimers[client] = INVALID_HANDLE;
 	return Plugin_Handled;
 }
