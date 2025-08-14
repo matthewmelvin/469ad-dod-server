@@ -2,10 +2,12 @@ On the lan...
 
 ```
 docker run -d -it -v /tmp:/tmp \
+	-e RCONPASS=<password> \
 	-e LANFLAG=1 \
         -e EXTIP=<lanip> \
-	-p 8082:80 -p 27000-27015:27000-27015/udp -p 27015:27015 \
+	-e SRVID=<ident> \
 	--restart unless-stopped \
+	--net=host \
 	--name dod-server \
 	dod-server:latest
 ```
@@ -18,15 +20,24 @@ On the net...
 
 ```
 docker run -d -it -v /tmp:/tmp \
+	-e RCONPASS=<password> \
         -e LANFLAG=0 \
+	-e LCLIP=<lanip> \
+	-e SRVID=<ident> \
         -e USERTOK=<token> \
-        -p 8082:80 -p 27000-27015:27000-27015/udp -p 27015:27015 \
-        --name dod-server \
         --restart unless-stopped \
+	--net=host \
+        --name dod-server \
         dod-server:latest
 ```
 
 USERTOK is a steam token to register the server with.
+
+LCLIP is the IP of the host docker is running on.
+
+This is used by hlxstats to find the log server.
+
+SVRID is a short server to identify the server instance.
 
 See: https://steamcommunity.com/dev/managegameservers
 
