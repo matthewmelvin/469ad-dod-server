@@ -17,7 +17,7 @@ new Handle:dbugEnabled = INVALID_HANDLE;
 new Handle:adminImmune = INVALID_HANDLE;
 new Handle:maxTeamDiff = INVALID_HANDLE;
 
-new Handle:g_SwitchTimers[MAXPLAYERS + 1];
+new Handle:g_PendingSwitch[MAXPLAYERS + 1];
 
 new bool:g_IsMapStart = false;
 new bool:g_IsNewRound = false;
@@ -35,7 +35,7 @@ public OnPluginStart()
 	PrintToServer("[NewTeamBalancer] multiple events hooked, plugin ready.");
 
 	for (int client = 1; client <= MaxClients; client++) {
-		g_SwitchTimers[client] = INVALID_HANDLE;
+		g_PendingSwitch[client] = INVALID_HANDLE;
 	}
 }
 
@@ -115,7 +115,7 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 
 public CheckAndBalance(client, int team, float delay)
 {
-	if (g_SwitchTimers[client] != INVALID_HANDLE) {
+	if (g_PendingSwitch[client] != INVALID_HANDLE) {
 		if (GetConVarBool(dbugEnabled))
 			PrintToServer("[NewTeamBalancer] %N is already pending a switch. Ignoring event.", client);
 		return;
@@ -142,7 +142,11 @@ public CheckAndBalance(client, int team, float delay)
 
 		if (i == client)
 			t = team;
-		else
+		else if (g_PendingSwitch[i] != INVALID_HANDLE) {
+			ResetPack(g_PendingSwitch[i]);
+			ReadPackCell(g_PendingSwitch[i]);
+			t = ReadPackCell(g_PendingSwitch[i]);
+		} else
 			t = GetClientTeam(i);
 
 		if (t == 2)
@@ -180,7 +184,8 @@ public CheckAndBalance(client, int team, float delay)
 					Handle swapData = CreateDataPack();
 					WritePackCell(swapData, client);
 					WritePackCell(swapData, newTeam);
-					g_SwitchTimers[client] = CreateTimer(delay, TimerSwitchTeam, swapData);
+					g_PendingSwitch[client] = swapData;
+					CreateTimer(delay, TimerSwitchTeam, swapData);
 				} else {
 					if (GetConVarBool(dbugEnabled))
 						PrintToServer("[NewTeamBalancer] teams are out of balance, swapping %N now", client);
@@ -221,8 +226,8 @@ public Action:TimerSwitchTeam(Handle:timer, any:swapData)
 	int client = ReadPackCell(swapData);
 	int newTeam = ReadPackCell(swapData);
 	CloseHandle(swapData);
+	g_PendingSwitch[client] = INVALID_HANDLE;
 
 	SwitchTeam(client, newTeam);
-	g_SwitchTimers[client] = INVALID_HANDLE;
 	return Plugin_Handled;
 }
