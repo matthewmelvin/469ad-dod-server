@@ -18,6 +18,7 @@ public Plugin myinfo =
 };
 
 new bool:g_IsRoundStarted = false;
+new bool:g_IsGameFinished = false;
 new bool:g_IsHibernating = true;
 new g_RealMaxBots = 0;
 
@@ -42,6 +43,7 @@ public void OnPluginStart()
 public OnMapStart()
 {
 	g_IsRoundStarted = false;
+	g_IsGameFinished = false;
 
 	int alliesSpawns = CountSpawns("info_player_allies");
 	int axisSpawns   = CountSpawns("info_player_axis");
@@ -59,6 +61,7 @@ public OnMapStart()
 
 public void Event_GameOver(Event event, const char[] name, bool dontBroadcast)
 {
+	g_IsGameFinished = true;
 	PrintToServer("[DynamicBotLimit] game over - bots disabled until next level");
 	ServerCommand("rcbotd config max_bots 0");
 }
@@ -181,8 +184,12 @@ int CountSpawns(const char[] classname)
 
 void SetNewMaxBots(int change)
 {
-
 	g_RealMaxBots = g_RealMaxBots + change;
+
+	// dont apply the change while in end game lockout
+	if (g_IsGameFinished)
+		return;
+
 	char cmd[64];
 	Format(cmd, sizeof(cmd), "rcbotd config max_bots %d", g_RealMaxBots);
 	if (GetConVarBool(g_CvarDynBotDebug))
