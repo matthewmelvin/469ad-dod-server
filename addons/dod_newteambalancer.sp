@@ -30,8 +30,8 @@ public OnPluginStart()
 	maxTeamDiff = CreateConVar("new_team_balancer_maxdiff", "1", "Max imbalance for DOD:S Balancer to ignore");
 
 	HookEvent("player_death", EventPlayerDeath);
-	HookEvent("player_team", EventPlayerTeam);
 	HookEvent("dod_round_start", EventRoundStart);
+	AddCommandListener(CommandJoinTeam, "jointeam");
 	PrintToServer("[NewTeamBalancer] multiple events hooked, plugin ready.");
 
 	for (int client = 1; client <= MaxClients; client++) {
@@ -47,47 +47,61 @@ public OnMapStart()
 public void EventRoundStart(Event event, const char[] name, bool dontBroadcast) {
 	// dont block join-team balancing for the first round
 	if (!g_IsMapStart) {
-	        g_IsNewRound = true;
+		g_IsNewRound = true;
 		if (GetConVarBool(dbugEnabled))
 			PrintToServer("[NewTeamBalancer] new round - disabling team-join balancing");
 	}
 	g_IsMapStart = false;
 }
 
-public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
+public Action CommandJoinTeam(int client, const char[] command, int argc)
 {
 	if (!GetConVarBool(cvarEnabled))
-		return;
+		return Plugin_Continue;
 
 	// team-join balancing disabled until the first death
 	// stop from interfering with plugins like jagdswitcher
 	if (g_IsNewRound)
-		return;
+		return Plugin_Continue;
 
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
-		return;
+	 if (!IsClientInGame(client) || IsFakeClient(client))
+		return Plugin_Continue;
 
-	new newTeam = GetEventInt(event, "team");
-	new oldTeam = GetEventInt(event, "oldteam");
+	char arg[8];
+	GetCmdArg(1, arg, sizeof(arg));
+	int newTeam = StringToInt(arg);
+	int oldTeam = GetClientTeam(client);
 
-	// only balance if newly joining play
-	if ((newTeam < 2) || (oldTeam >= 2))
-		return;
+	// dont balance going to spectator
+	if (newTeam == 1)
+		return Plugin_Continue;
 
-	if ((newTeam == 3) & (GetUserAdmin(client) != INVALID_ADMIN_ID)) {
-		// force switch regardless of balance
-		newTeam = (newTeam == 2) ? 3 : 2;
-		PrintToServer("[NewTeamBalancer] %N joined - switching admin.", client, newTeam, oldTeam);
-		SwitchTeam(client, newTeam, oldTeam);
-		return;
+	if (GetConVarBool(dbugEnabled)) {
+		if (newTeam == 0)
+			PrintToServer("[NewTeamBalancer] %N auto-assigning - checking balance.", client);
+		else if (oldTeam < 2)
+			PrintToServer("[NewTeamBalancer] %N joining team - checking balance.", client);
+		else
+			PrintToServer("[NewTeamBalancer] %N switching team - checking balance.", client);
 	}
 
-	if (GetConVarBool(dbugEnabled))
-		PrintToServer("[NewTeamBalancer] %N joined - checking balance.", client, newTeam, oldTeam);
+	if (newTeam == 0) {
+		// auto-assign, pick one and balance accordingly
+		newTeam = GetRandomInt(2, 3);
+		if (!CheckAndBalance(client, newTeam, 0.0)) {
+			// didnt get switched, so send to original pick
+			SwitchTeam(client, newTeam, oldTeam);
+		}
+		return Plugin_Handled;
+	}
 
-	// delay so the join can finish
-	CheckAndBalance(client, newTeam, 0.0);
+	if (CheckAndBalance(client, newTeam, 0.0)) {
+		if (oldTeam >= 2)
+			PrintCenterText(client, "Changing teams would make them unbalanced!");
+		return Plugin_Handled;
+	}
+
+	return Plugin_Continue;
 }
 
 public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
@@ -115,19 +129,19 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 	new team = GetClientTeam(victim);
 
 	if (attacker > 0) {
-		// delay the move so it doesnt look like a team kill
-		CheckAndBalance(victim, team, 6.2);
+		// delay the move so it looks like a team kill
+		CheckAndBalance(victim, team, 2.2);
 	} else {
 		CheckAndBalance(victim, team, 0.0);
 	}
 }
 
-public CheckAndBalance(client, int team, float delay)
+public bool CheckAndBalance(client, int team, float delay)
 {
 	if (g_PendingSwitch[client] != INVALID_HANDLE) {
 		if (GetConVarBool(dbugEnabled))
 			PrintToServer("[NewTeamBalancer] %N is already pending a switch. Ignoring event.", client);
-		return;
+		return false;
 	}
 
 	new isBot = IsFakeClient(client);
@@ -187,7 +201,6 @@ public CheckAndBalance(client, int team, float delay)
 				PrintToServer("[NewTeamBalancer] teams are out of balance, but %N is an admin.", client);
 			} else {
 				int newTeam = (team == 2) ? 3 : 2;
-				int oldTeam = (team == 2) ? 3 : 2;
 				if (delay > 0) {
 					if (GetConVarBool(dbugEnabled))
 						PrintToServer("[NewTeamBalancer] teams are out of balance, %N will be swapped", client);
@@ -200,8 +213,9 @@ public CheckAndBalance(client, int team, float delay)
 				} else {
 					if (GetConVarBool(dbugEnabled))
 						PrintToServer("[NewTeamBalancer] teams are out of balance, swapping %N now", client);
-					SwitchTeam(client, newTeam, oldTeam);
+					SwitchTeam(client, newTeam, team);
 				}
+				return true;
 			}
 		} else {
 			if (GetConVarBool(dbugEnabled))
@@ -211,6 +225,8 @@ public CheckAndBalance(client, int team, float delay)
 		if (GetConVarBool(dbugEnabled))
 			PrintToServer("[NewTeamBalancer] teams are in balance, leaving %N alone.", client);
 	}
+
+	return false;
 }
 
 public SwitchTeam(client, int newTeam, int oldTeam)
@@ -218,23 +234,16 @@ public SwitchTeam(client, int newTeam, int oldTeam)
 	int curTeam = GetClientTeam(client);
 
 	if (curTeam == newTeam) {
-		PrintToServer("[NewTeamBalancer] %N already switched - aborted: %d == %d",  client, (curTeam-1), (newTeam-1));
+		if (GetConVarBool(dbugEnabled))
+			PrintToServer("[NewTeamBalancer] %N already switched - aborted: %d == %d",  client, (curTeam-1), (newTeam-1));
 		return;
-	}
-
-	if (curTeam != oldTeam) {
-		PrintToServer("[NewTeamBalancer] %N moved somewhere - aborted: %d != %d", client, (curTeam-1), (oldTeam-1));
-		return;
-	}
-
-	if (oldTeam < 2) {
-		// cancel pending class choice from old team
-		FakeClientCommand(client, "joinclass 0");		
 	}
 
 	ChangeClientTeam(client, newTeam);
 	PrintToServer("[NewTeamBalancer] %N has been switched teams: from %d to %d", client, (oldTeam-1), (newTeam-1));
-	PrintToChatAll("\x04[NewBal]\x01 %N has been switched to balance the teams.", client);
+	if (curTeam >= 2) {
+		PrintToChatAll("\x04[NewBal]\x01 %N has been switched to balance the teams.", client);
+	}
 }
 
 public Action:TimerSwitchTeam(Handle:timer, any:swapData)
