@@ -75,9 +75,18 @@ public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 	if ((newTeam < 2) || (oldTeam >= 2))
 		return;
 
+	if ((newTeam == 3) & (GetUserAdmin(client) != INVALID_ADMIN_ID)) {
+		// force switch regardless of balance
+		newTeam = (newTeam == 2) ? 3 : 2;
+		PrintToServer("[NewTeamBalancer] %N joined - switching admin.", client, newTeam, oldTeam);
+		SwitchTeam(client, newTeam, oldTeam);
+		return;
+	}
+
 	if (GetConVarBool(dbugEnabled))
 		PrintToServer("[NewTeamBalancer] %N joined - checking balance.", client, newTeam, oldTeam);
 
+	// delay so the join can finish
 	CheckAndBalance(client, newTeam, 0.0);
 }
 
@@ -178,18 +187,20 @@ public CheckAndBalance(client, int team, float delay)
 				PrintToServer("[NewTeamBalancer] teams are out of balance, but %N is an admin.", client);
 			} else {
 				int newTeam = (team == 2) ? 3 : 2;
+				int oldTeam = (team == 2) ? 3 : 2;
 				if (delay > 0) {
 					if (GetConVarBool(dbugEnabled))
 						PrintToServer("[NewTeamBalancer] teams are out of balance, %N will be swapped", client);
 					Handle swapData = CreateDataPack();
 					WritePackCell(swapData, client);
 					WritePackCell(swapData, newTeam);
+					WritePackCell(swapData, team);
 					g_PendingSwitch[client] = swapData;
 					CreateTimer(delay, TimerSwitchTeam, swapData);
 				} else {
 					if (GetConVarBool(dbugEnabled))
 						PrintToServer("[NewTeamBalancer] teams are out of balance, swapping %N now", client);
-					SwitchTeam(client, newTeam);
+					SwitchTeam(client, newTeam, oldTeam);
 				}
 			}
 		} else {
@@ -202,18 +213,23 @@ public CheckAndBalance(client, int team, float delay)
 	}
 }
 
-public SwitchTeam(client, int newTeam)
+public SwitchTeam(client, int newTeam, int oldTeam)
 {
-	int oldTeam = GetClientTeam(client);
+	int curTeam = GetClientTeam(client);
 
-	if ((oldTeam < 2) || !IsClientInGame(client)) {
-		PrintToServer("[NewTeamBalancer] switch of %N aborted - left play", client);
+	if (curTeam == newTeam) {
+		PrintToServer("[NewTeamBalancer] %N already switched - aborted: %d == %d",  client, (curTeam-1), (newTeam-1));
 		return;
 	}
 
-	if (oldTeam == newTeam) {
-		PrintToServer("[NewTeamBalancer] switch of %N aborted - already switched", client);
+	if (curTeam != oldTeam) {
+		PrintToServer("[NewTeamBalancer] %N moved somewhere - aborted: %d != %d", client, (curTeam-1), (oldTeam-1));
 		return;
+	}
+
+	if (oldTeam < 2) {
+		// cancel pending class choice from old team
+		FakeClientCommand(client, "joinclass 0");		
 	}
 
 	ChangeClientTeam(client, newTeam);
@@ -226,9 +242,10 @@ public Action:TimerSwitchTeam(Handle:timer, any:swapData)
 	ResetPack(swapData);
 	int client = ReadPackCell(swapData);
 	int newTeam = ReadPackCell(swapData);
+	int oldTeam = ReadPackCell(swapData);
 	CloseHandle(swapData);
 	g_PendingSwitch[client] = INVALID_HANDLE;
 
-	SwitchTeam(client, newTeam);
+	SwitchTeam(client, newTeam, oldTeam);
 	return Plugin_Handled;
 }
