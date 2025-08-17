@@ -19,9 +19,6 @@ new Handle:maxTeamDiff = INVALID_HANDLE;
 
 new Handle:g_PendingSwitch[MAXPLAYERS + 1];
 
-new bool:g_IsMapStart = false;
-new bool:g_IsNewRound = false;
-
 public OnPluginStart()
 {
 	cvarEnabled = CreateConVar("new_team_balancer_enable", "1", "Enables the DOD:S Balancer plugin");
@@ -30,55 +27,11 @@ public OnPluginStart()
 	maxTeamDiff = CreateConVar("new_team_balancer_maxdiff", "1", "Max imbalance for DOD:S Balancer to ignore");
 
 	HookEvent("player_death", EventPlayerDeath);
-	HookEvent("player_team", EventPlayerTeam);
-	HookEvent("dod_round_start", EventRoundStart);
-	PrintToServer("[NewTeamBalancer] multiple events hooked, plugin ready.");
+	PrintToServer("[NewTeamBalancer] player_death events hooked, plugin ready.");
 
 	for (int client = 1; client <= MaxClients; client++) {
 		g_PendingSwitch[client] = INVALID_HANDLE;
 	}
-}
-
-public OnMapStart()
-{
-	g_IsMapStart = true;
-}
-
-public void EventRoundStart(Event event, const char[] name, bool dontBroadcast) {
-	// dont block join-team balancing for the first round
-	if (!g_IsMapStart) {
-	        g_IsNewRound = true;
-		if (GetConVarBool(dbugEnabled))
-			PrintToServer("[NewTeamBalancer] new round - disabling team-join balancing");
-	}
-	g_IsMapStart = false;
-}
-
-public EventPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
-{
-	if (!GetConVarBool(cvarEnabled))
-		return;
-
-	// team-join balancing disabled until the first death
-	// stop from interfering with plugins like jagdswitcher
-	if (g_IsNewRound)
-		return;
-
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
-		return;
-
-	new newTeam = GetEventInt(event, "team");
-	new oldTeam = GetEventInt(event, "oldteam");
-
-	// only balance if newly joining play
-	if ((newTeam < 2) || (oldTeam >= 2))
-		return;
-
-	if (GetConVarBool(dbugEnabled))
-		PrintToServer("[NewTeamBalancer] %N joined - checking balance.", client, newTeam, oldTeam);
-
-	CheckAndBalance(client, newTeam, 0.0);
 }
 
 public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
@@ -87,11 +40,6 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 		return;
 
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-	if (g_IsNewRound && (attacker > 0)) {
-		if (GetConVarBool(dbugEnabled))
-			PrintToServer("[NewTeamBalancer] first kill - re-enabling team-join balancing");
-		g_IsNewRound = false;
-	}
 
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (victim <= 0 || !IsClientInGame(victim))
@@ -184,12 +132,13 @@ public CheckAndBalance(client, int team, float delay)
 					Handle swapData = CreateDataPack();
 					WritePackCell(swapData, client);
 					WritePackCell(swapData, newTeam);
+					WritePackCell(swapData, team);
 					g_PendingSwitch[client] = swapData;
 					CreateTimer(delay, TimerSwitchTeam, swapData);
 				} else {
 					if (GetConVarBool(dbugEnabled))
 						PrintToServer("[NewTeamBalancer] teams are out of balance, swapping %N now", client);
-					SwitchTeam(client, newTeam);
+					SwitchTeam(client, newTeam, team);
 				}
 			}
 		} else {
@@ -202,17 +151,17 @@ public CheckAndBalance(client, int team, float delay)
 	}
 }
 
-public SwitchTeam(client, int newTeam)
+public SwitchTeam(client, int newTeam, int oldTeam)
 {
-	int oldTeam = GetClientTeam(client);
+	int curTeam = GetClientTeam(client);
 
-	if ((oldTeam < 2) || !IsClientInGame(client)) {
-		PrintToServer("[NewTeamBalancer] switch of %N aborted - left play", client);
+	if (curTeam == newTeam) {
+		PrintToServer("[NewTeamBalancer] %N already switched - aborted: %d == %d",  client, (curTeam-1), (newTeam-1));
 		return;
 	}
 
-	if (oldTeam == newTeam) {
-		PrintToServer("[NewTeamBalancer] switch of %N aborted - already switched", client);
+	if (curTeam != oldTeam) {
+		PrintToServer("[NewTeamBalancer] %N moved somewhere - aborted: %d != %d", client, (curTeam-1), (oldTeam-1));
 		return;
 	}
 
@@ -226,9 +175,10 @@ public Action:TimerSwitchTeam(Handle:timer, any:swapData)
 	ResetPack(swapData);
 	int client = ReadPackCell(swapData);
 	int newTeam = ReadPackCell(swapData);
+	int oldTeam = ReadPackCell(swapData);
 	CloseHandle(swapData);
 	g_PendingSwitch[client] = INVALID_HANDLE;
 
-	SwitchTeam(client, newTeam);
+	SwitchTeam(client, newTeam, oldTeam);
 	return Plugin_Handled;
 }
