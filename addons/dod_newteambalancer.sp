@@ -88,23 +88,31 @@ public Action CommandJoinTeam(int client, const char[] command, int argc)
 	if (newTeam == 0) {
 		// auto-assign, pick one and balance accordingly
 		newTeam = GetRandomInt(2, 3);
-		if (!CheckAndBalance(client, newTeam, 0.0)) {
-			// didnt get switched, so send to original pick
-			SwitchTeam(client, newTeam, oldTeam);
+		if (CheckBalance(client, newTeam)) {
+			SwitchTeam(client, newTeam, 0);
+		} else {
+			newTeam = (newTeam == 2) ? 3 : 2;
+			SwitchTeam(client, newTeam, 0);
 		}
+		PrintToServer("[NewTeamBalancer] %N has been auto-assigned to team: %d", client, (newTeam-1));
 		return Plugin_Handled;
 	}
 
-	if (CheckAndBalance(client, newTeam, 0.0)) {
-		if (oldTeam >= 2)
-			PrintCenterText(client, "Changing teams would make them unbalanced!");
+	if (!CheckBalance(client, newTeam)) {
+		PrintCenterText(client, "Team is full!");
+		if (newTeam == 2) {
+			PrintToChat(client, "The U.S. Army is full!");
+		} else {
+			PrintToChat(client, "The Wehrmacht is full!");
+		}
+		PrintToServer("[NewTeamBalancer] %N has been blocked from team: %d", client, (newTeam-1));
 		return Plugin_Handled;
 	}
 
 	return Plugin_Continue;
 }
 
-public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
+public void EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (!GetConVarBool(cvarEnabled))
 		return;
@@ -128,20 +136,33 @@ public EventPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 
 	new team = GetClientTeam(victim);
 
+	if (CheckBalance(victim, team))
+		return;
+
+	int newTeam = (team == 2) ? 3 : 2;
 	if (attacker > 0) {
 		// delay the move so it looks like a team kill
-		CheckAndBalance(victim, team, 2.2);
+		if (GetConVarBool(dbugEnabled))
+			PrintToServer("[NewTeamBalancer] teams are out of balance, swapping %N soon.", victim);
+		Handle swapData = CreateDataPack();
+		WritePackCell(swapData, victim);
+		WritePackCell(swapData, newTeam);
+		WritePackCell(swapData, team);
+		g_PendingSwitch[victim] = swapData;
+		CreateTimer(2.5, TimerSwitchTeam, swapData);
 	} else {
-		CheckAndBalance(victim, team, 0.0);
+		if (GetConVarBool(dbugEnabled))
+			PrintToServer("[NewTeamBalancer] teams are out of balance, swapping %N now.", victim);
+		SwitchTeam(victim, newTeam, team);
 	}
 }
 
-public bool CheckAndBalance(client, int team, float delay)
+public bool CheckBalance(client, int team)
 {
 	if (g_PendingSwitch[client] != INVALID_HANDLE) {
 		if (GetConVarBool(dbugEnabled))
 			PrintToServer("[NewTeamBalancer] %N is already pending a switch. Ignoring event.", client);
-		return false;
+		return true;
 	}
 
 	new isBot = IsFakeClient(client);
@@ -199,54 +220,34 @@ public bool CheckAndBalance(client, int team, float delay)
 		{
 			if (GetConVarBool(adminImmune) && GetUserAdmin(client) != INVALID_ADMIN_ID) {
 				PrintToServer("[NewTeamBalancer] teams are out of balance, but %N is an admin.", client);
-			} else {
-				int newTeam = (team == 2) ? 3 : 2;
-				if (delay > 0) {
-					if (GetConVarBool(dbugEnabled))
-						PrintToServer("[NewTeamBalancer] teams are out of balance, %N will be swapped", client);
-					Handle swapData = CreateDataPack();
-					WritePackCell(swapData, client);
-					WritePackCell(swapData, newTeam);
-					WritePackCell(swapData, team);
-					g_PendingSwitch[client] = swapData;
-					CreateTimer(delay, TimerSwitchTeam, swapData);
-				} else {
-					if (GetConVarBool(dbugEnabled))
-						PrintToServer("[NewTeamBalancer] teams are out of balance, swapping %N now", client);
-					SwitchTeam(client, newTeam, team);
-				}
 				return true;
+			} else {
+				if (GetConVarBool(dbugEnabled))
+					PrintToServer("[NewTeamBalancer] teams are out of balance, %N should be swapped.", client);
+				return false;
 			}
 		} else {
 			if (GetConVarBool(dbugEnabled))
 				PrintToServer("[NewTeamBalancer] teams are out of balance, but %N already there.", client);
+			return true;
 		}
-	} else {
-		if (GetConVarBool(dbugEnabled))
-			PrintToServer("[NewTeamBalancer] teams are in balance, leaving %N alone.", client);
 	}
 
-	return false;
+	if (GetConVarBool(dbugEnabled))
+		PrintToServer("[NewTeamBalancer] teams are in balance, %N needs no change.", client);
+	return true;
 }
 
-public SwitchTeam(client, int newTeam, int oldTeam)
+public void SwitchTeam(client, int newTeam, int oldTeam)
 {
-	int curTeam = GetClientTeam(client);
-
-	if (curTeam == newTeam) {
-		if (GetConVarBool(dbugEnabled))
-			PrintToServer("[NewTeamBalancer] %N already switched - aborted: %d == %d",  client, (curTeam-1), (newTeam-1));
-		return;
-	}
-
 	ChangeClientTeam(client, newTeam);
-	PrintToServer("[NewTeamBalancer] %N has been switched teams: from %d to %d", client, (oldTeam-1), (newTeam-1));
-	if (curTeam >= 2) {
+	if (oldTeam >= 2) {
+		PrintToServer("[NewTeamBalancer] %N has been switched teams: from %d to %d", client, (oldTeam-1), (newTeam-1));
 		PrintToChatAll("\x04[NewBal]\x01 %N has been switched to balance the teams.", client);
 	}
 }
 
-public Action:TimerSwitchTeam(Handle:timer, any:swapData)
+public Action TimerSwitchTeam(Handle:timer, any:swapData)
 {
 	ResetPack(swapData);
 	int client = ReadPackCell(swapData);
@@ -255,6 +256,17 @@ public Action:TimerSwitchTeam(Handle:timer, any:swapData)
 	CloseHandle(swapData);
 	g_PendingSwitch[client] = INVALID_HANDLE;
 
-	SwitchTeam(client, newTeam, oldTeam);
+	int curTeam = GetClientTeam(client);
+
+	if (curTeam == newTeam) {
+		if (GetConVarBool(dbugEnabled))
+			PrintToServer("[NewTeamBalancer] %N already switched - aborted: %d == %d",  client, (curTeam-1), (newTeam-1));
+	} else if (curTeam != oldTeam) {
+		if (GetConVarBool(dbugEnabled))
+			PrintToServer("[NewTeamBalancer] %N moved somewhere - aborted: %d != %d",  client, (curTeam-1), (oldTeam-1));
+	} else {
+		SwitchTeam(client, newTeam, oldTeam);
+	}
+
 	return Plugin_Handled;
 }
