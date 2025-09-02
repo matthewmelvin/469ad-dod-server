@@ -108,38 +108,37 @@ echo "$map" > dod/cfg/lastmap.txt
 echo "Generated startup.txt config..."
 grep -H . dod/cfg/startup.txt
 
-# For whatever reason, cpu does not go idle when hibernating even after the bots
-# are all kicked out.  But cpu will idle on newly started server until the first
-# user comes along.  So when the server tries to hibernate after that, force the
-# container to restart (assumes restart=unless-stopped set). Track last map seen
-# so the mapcycle isn't constantly being sent back to the beginning.
+# The bots keep re-joining when booted preventing the server from hibernating.
+# So when the server tries to hibernate, force the container to restart
+# (assumes restart=unless-stopped set). Track last map seen so the mapcycle
+# isn't constantly being sent back to the beginning.
 : > dod/console.log
 (tail -f dod/console.log | while read -r line; do
-#nokill#	if [ "$used" != "1" ] && echo "$line" | grep -q "^Client.*connected"; then
-#nokill#		echo "The first client has connected..."
-#nokill#		used=1
-#nokill#		continue
-#nokill#        fi
+	if [ "$used" != "1" ] && echo "$line" | grep -q "^Client.*connected"; then
+		echo "The first client has connected..."
+		used=1
+		continue
+        fi
 	last=$(echo "$line" | awk -F '[()]' '/Hook_LevelInit/{print $2}')
 	if [ -n "$last" ]; then
 		echo "Saving last seen map to file: \"$last"\"
 		echo "$last" > dod/cfg/lastmap.txt
 		continue
 	fi
-#nokill#	if echo "$line" | grep -q "Server is hibernating"; then
-#nokill#		if [ "$used" != "1" ]; then
-#nokill#			echo "Server not used, letting hibernate..."
-#nokill#			continue
-#nokill#		fi
-#nokill#		echo "Removing last map tracking file..."
-#nokill#		rm -v dod/cfg/lastmap.txt
-#nokill#		echo "Shutting down container via kill..."
-#nokill#		ps auxwww | awk '/[s]rcds_/{print $2}' | xargs -r kill
-#nokill#		while true; do
-#nokill#			echo "Waiting to die..."
-#nokill#			sleep 1;
-#nokill#		done
-#nokill#	fi
+	if echo "$line" | grep -q "Server is hibernating"; then
+		if [ "$used" != "1" ]; then
+			echo "Server not used, letting hibernate..."
+			continue
+		fi
+		echo "Removing last map tracking file..."
+		rm -v dod/cfg/lastmap.txt
+		echo "Shutting down container via kill..."
+		ps auxwww | awk '/[s]rcds_/{print $2}' | xargs -r kill
+		while true; do
+			echo "Waiting to die..."
+			sleep 1;
+		done
+	fi
 done) &
 
 ./srcds_run -condebug -norestart -game dod \
