@@ -6,7 +6,7 @@ public Plugin myinfo =
 {
     name = "No Bots in Endgame",
     author = "Mloe",
-    description = "Sets RCBot max_bots to 0 at end of DoD:S rounds.",
+    description = "Stop bots joining during DOD:S end-game",
     version = "0.1",
     url = ""
 };
@@ -20,5 +20,7 @@ public void OnPluginStart()
 public void OnGameOver(Event event, const char[] name, bool dontBroadcast)
 {
     PrintToServer("[NoBotsInEndgame] dod_game_over event fired, disabling bots.");
-    ServerCommand("rcbotd config max_bots 0");
+    ServerCommand("rcbotd config max_bots -1");
+    ServerCommand("rcbotd config min_bots -1");
+    ServerCommand("rcbot_bot_quota_interval 0");
 }
