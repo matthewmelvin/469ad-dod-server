@@ -19,7 +19,7 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections \
   && echo "deb http://security.ubuntu.com/ubuntu focal-security main universe" > /etc/apt/sources.list.d/ubuntu-focal-sources.list \
   && apt-get update -y \
   && apt-get install -y --no-install-recommends \
-    libncurses5:i386 libsdl2-2.0-0:i386 \
+    libncurses5:i386 libsdl2-2.0-0:i386 libcurl4t64:i386 \
     steamcmd \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
