@@ -2,6 +2,11 @@
 
 cd "$(dirname "$0")" || exit 1
 
+if [ ! -d /tmp/dumps ]; then
+	mkdir /tmp/dumps
+	chmod 1777 /tmp/dumps
+fi
+
 sudo /etc/init.d/lighttpd start
 port=8082
 
