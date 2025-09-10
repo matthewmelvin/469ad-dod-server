@@ -50,14 +50,12 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && rm -rvf addons/metamod/bin/linux64/ \
                addons/metamod/bin/linuxsteamrt64 \
                addons/metamod_x64.vdf \
-    && unzip /tmp/addons/rcbot2alpha5.zip \
-    && rm -rf addons/rcbot2/waypoints/hl2mp \
-              addons/rcbot2/waypoints/synergy \
-              addons/rcbot2/waypoints/tf \
-              addons/rcbot2/manual \
-              addons/rcbot2/profiles/*ini \
+    && unzip /tmp/addons/rcbot2-linux-test-1757499229.zip \
+    && : > addons/rcbot2/config/config.ini \
+    && mkdir -p addons/rcbot2/waypoints/dod/ \
     && cp -v /tmp/waypoints/*.rcw addons/rcbot2/waypoints/dod/ \
-    && cp -v /tmp/addons/{rcbot.2.dods.so,RCBot2Meta_i486.so} addons/rcbot2/bin/ \
+    && mkdir -p addons/rcbot2/profiles/ \
+    && cp -v /tmp/config/profiles/*.ini addons/rcbot2/profiles/ \
     && tar -xzvf /tmp/addons/sourcemod-1.12.0-git7196-linux.tar.gz \
     && rm -rf addons/sourcemod/bin/x64 \
               addons/sourcemod/bin/x64 \
@@ -72,7 +70,6 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && unzip /tmp/addons/delayhibernate.zip \
     && unzip /tmp/addons/dodsfixchangelevel_win_linux_24022025.zip \
     && cp -v /tmp/addons/dod_botfriendlyfire.smx addons/sourcemod/plugins/ \
-    && cp -v /tmp/addons/dod_dynamicbotlimit.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_newteambalancer.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_stuckbotkiller.smx addons/sourcemod/plugins/ \
     && cp -v /tmp/addons/dod_detonatenades.smx addons/sourcemod/plugins/ \
@@ -89,10 +86,7 @@ RUN su - $USER -c "cd $HOME/dod-server/dod \
     && cp -v /tmp/config/motd_text.txt cfg/ \
     && cp -v /tmp/config/server.cfg cfg/ \
     && cp -v /tmp/config/mapcycle.txt cfg/ \
-    && cp -v /tmp/config/rcbot2.ini addons/rcbot2/config/config.ini \
-    && cp -v /tmp/config/hookinfo.ini addons/rcbot2/config/hookinfo.ini \
-    && cp -v /tmp/config/bot_quota.ini addons/rcbot2/config/ \
-    && cp -v /tmp/config/profiles/*.ini addons/rcbot2/profiles/ \
+    && cp -v /tmp/config/dod_sniperbridge_rc1.cfg cfg/ \
     && cp -v /tmp/config/admins_simple.ini addons/sourcemod/configs/ \
     && cp -v /tmp/config/startup.sh ../ \
     && chmod 755 ../startup.sh \
